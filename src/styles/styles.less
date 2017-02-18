@@ -1,0 +1,70 @@
+@import '../../node_modules/toastr/toastr';
+@import (less) '../../node_modules/semantic-ui-css/semantic.css';
+@import (less) '../../node_modules/semantic-ui-calendar/dist/calendar.css';
+
+/* General */
+a {
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+.text-right {
+    text-align: right;
+}
+
+.ui.secondary.pointing.menu .item.logo-item {
+    padding: 0 20px;
+}
+
+.ui.fixed.menu.button-bar.top {
+    top: 50px;
+}
+
+.ui.popup.calendar:focus {
+    outline: none;
+}
+
+#main-menu {
+    margin-bottom: 0;
+}
+.ui.main.container {
+    padding-top: 15px;
+}
+
+.date-display {
+    color: #4183C4;
+    cursor: pointer;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+@media only screen and (max-width: 767px) {
+    // on mobile, eliminate margin on main menu
+    #main-menu > .ui.container {
+        margin: 0px !important;
+    }
+
+    // hide the Company Name on phones
+    .menu .item.logo-item span {
+        display: none;
+    }
+
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+@media only screen and (min-width: 768px) {
+    .hide-desktop {
+        display: none !important;
+    }
+}
+
+// bump up the opacity a bit, from 0.02 to 0.05
+.ui.striped.table > tr:nth-child(2n), .ui.striped.table tbody tr:nth-child(2n) {
+    background-color: rbga(0, 0, 50, 0.05);
+}

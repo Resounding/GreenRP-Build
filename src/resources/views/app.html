@@ -1,0 +1,20 @@
+<template>
+    <require from="styles/styles.css"></require>
+    <require from="./controls/nav-bar"></require>
+    <require from="./zones/zone-detail"></require>
+    <require from="./weeks/week-detail"></require>
+
+    <nav-bar router.bind="router"></nav-bar>
+
+    <div class="pusher">
+        <div class="ui main container">
+            <router-view></router-view>
+        </div>
+    </div>
+    <div id="zone-detail-sidebar" class="ui right sidebar super-duper wide">
+        <zone-detail></zone-detail>
+    </div>
+    <div id="week-detail-sidebar" class="ui right sidebar super wide">
+        <week-detail></week-detail>
+    </div>
+</template>
