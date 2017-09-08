@@ -1077,7 +1077,7 @@ define('resources/services/configuration',["require", "exports"], function (requ
             this.app_root = 'resources/views/app';
             this.login_root = 'resources/views/login';
             this.remote_server = 'https://resounding.cloudant.com';
-            this.remote_database_name = Configuration.isDebug() ? this.remote_server + "/boekestyn" : this.remote_server + "/boekestyn";
+            this.remote_database_name = Configuration.isDebug() ? this.remote_server + "/boekestyn-test" : this.remote_server + "/boekestyn";
         }
         Configuration.isDebug = function () {
             return window.location.hostname === 'localhost';
@@ -1357,802 +1357,6 @@ define('resources/views/login',["require", "exports", "aurelia-framework", "../s
         __metadata("design:paramtypes", [authentication_1.Authentication, aurelia_framework_1.Aurelia, configuration_1.Configuration])
     ], Login);
     exports.Login = Login;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-define('resources/services/data/activities-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../database", "../../models/activity", "../../models/recipe"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, database_1, activity_1, recipe_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var ActivitiesService = ActivitiesService_1 = (function () {
-        function ActivitiesService(database, events) {
-            this.database = database;
-            this.events = events;
-        }
-        ActivitiesService.prototype.getOne = function (id) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(id)
-                    .then(function (result) {
-                    var doc = new activity_1.ActivityDocument(result);
-                    resolve(doc);
-                })
-                    .catch(reject);
-            });
-        };
-        ActivitiesService.prototype.getAll = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.find({ selector: { type: activity_1.ActivityDocument.ActivityDocumentType } })
-                    .then(function (result) {
-                    var docs = result.docs.map(function (doc) { return new activity_1.ActivityDocument(doc); });
-                    resolve(docs);
-                })
-                    .catch(reject);
-            });
-        };
-        ActivitiesService.prototype.find = function (filter) {
-            return __awaiter(this, void 0, void 0, function () {
-                var result, docs, e_1;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            _a.trys.push([0, 2, , 3]);
-                            return [4, this.database.db.find(filter)];
-                        case 1:
-                            result = _a.sent(), docs = result.docs.map(function (doc) { return new activity_1.ActivityDocument(doc); });
-                            return [2, docs];
-                        case 2:
-                            e_1 = _a.sent();
-                            throw e_1;
-                        case 3: return [2];
-                    }
-                });
-            });
-        };
-        ActivitiesService.prototype.save = function (activity) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var doc = new activity_1.ActivityDocument(activity), json = doc.toJSON(), result = {
-                    ok: true,
-                    errors: []
-                };
-                if (!doc.name) {
-                    result.ok = false;
-                    result.errors.push('The Activity Name is required.');
-                }
-                if (!doc.date || !moment(doc.date).isValid()) {
-                    result.ok = false;
-                    result.errors.push('Please choose a valid due date.');
-                }
-                if (activity_1.ActivityStatuses.equals(doc.status, activity_1.ActivityStatuses.Incomplete) && doc.journal && !doc.journal.notes) {
-                    result.ok = false;
-                    result.errors.push('Please enter the reason the activity was Incomplete.');
-                }
-                if (!result.ok) {
-                    return resolve(result);
-                }
-                if (doc.isNew) {
-                    return _this.database.db.post(json)
-                        .then(function (response) {
-                        if (response.ok) {
-                            doc._id = response.id;
-                            doc._rev = response.rev;
-                            result.activity = doc;
-                            _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
-                            resolve(result);
-                        }
-                        return reject(Error('Activity was not saved.'));
-                    })
-                        .catch(reject);
-                }
-                else {
-                    return _this.database.db.put(json)
-                        .then(function (response) {
-                        if (response.ok) {
-                            doc._rev = response.rev;
-                            result.activity = doc;
-                            _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
-                            resolve(result);
-                        }
-                        return reject(Error('Activity was not saved.'));
-                    })
-                        .catch(reject);
-                }
-            });
-        };
-        ActivitiesService.prototype.delete = function (activity) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var result = {
-                    ok: true,
-                    errors: [],
-                    activity: activity
-                };
-                _this.database.db.remove(activity._id, activity._rev)
-                    .then(function (response) {
-                    if (response.ok) {
-                        _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
-                        return resolve(result);
-                    }
-                    return reject(response);
-                })
-                    .catch(reject);
-            });
-        };
-        ActivitiesService.prototype.byCrop = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.query('filters/activities-by-crop')
-                    .then(function (result) {
-                    var rows = result.rows;
-                    if (!rows || !rows.length)
-                        return resolve([]);
-                    var response = rows[0].value, keys = Object.keys(response), returnValue = [];
-                    for (var _i = 0, _a = keys.sort(); _i < _a.length; _i++) {
-                        var key = _a[_i];
-                        var item = { crop: key, activities: response[key] };
-                        returnValue.push(item);
-                    }
-                    resolve(returnValue);
-                })
-                    .catch(reject);
-            });
-        };
-        ActivitiesService.prototype.byRecipe = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.find({ selector: {
-                        type: { '$eq': recipe_1.RecipeDocument.RecipeDocumentType }
-                    } })
-                    .then(function (recipesResult) {
-                    var recipes = recipesResult.docs.reduce(function (memo, doc) {
-                        memo[doc._id] = doc;
-                        return memo;
-                    }, {});
-                    _this.database.db.query('filters/activities-by-recipe')
-                        .then(function (result) {
-                        var rows = result.rows;
-                        if (!rows || !rows.length)
-                            return resolve([]);
-                        var response = rows[0].value, keys = Object.keys(response), returnValue = [];
-                        for (var _i = 0, _a = keys.sort(); _i < _a.length; _i++) {
-                            var key = _a[_i];
-                            var recipe = recipes[key];
-                            if (recipe) {
-                                var item = { recipe: recipe, activities: response[key] };
-                                returnValue.push(item);
-                            }
-                        }
-                        resolve(returnValue);
-                    })
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        return ActivitiesService;
-    }());
-    ActivitiesService.ActivitiesChangedEvent = 'Activities changed';
-    ActivitiesService = ActivitiesService_1 = __decorate([
-        aurelia_framework_1.autoinject,
-        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
-    ], ActivitiesService);
-    exports.ActivitiesService = ActivitiesService;
-    var ActivitiesService_1;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/services/data/orders-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../../models/order", "../database"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, order_1, database_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var OrdersService = OrdersService_1 = (function () {
-        function OrdersService(database, events) {
-            this.database = database;
-            this.events = events;
-        }
-        OrdersService.prototype.create = function (order) {
-            var _this = this;
-            var orderDoc = new order_1.OrderDocument(order).toJSON();
-            if (!orderDoc.customer) {
-                return Promise.reject(Error('Please choose a customer.'));
-            }
-            else if (!orderDoc.quantity) {
-                return Promise.reject(Error('Please enter the quantity for the order.'));
-            }
-            else if (!orderDoc.plant) {
-                return Promise.reject(Error('Please choose a plant for the order.'));
-            }
-            return new Promise(function (resolve, reject) {
-                return _this.database.db.post(orderDoc)
-                    .then(function (result) {
-                    if (result.ok) {
-                        orderDoc._id = result.id;
-                        orderDoc._rev = result.rev;
-                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
-                        resolve(orderDoc);
-                    }
-                    else {
-                        reject(new Error('Order was not saved.'));
-                    }
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.createBulk = function (orders) {
-            var _this = this;
-            var orderDocs = orders.map(function (o) { return new order_1.OrderDocument(o).toJSON(); });
-            if (_.any(orderDocs, function (o) { return !o.customer; })) {
-                return Promise.reject(Error('Please choose a customer.'));
-            }
-            else if (_.any(orderDocs, function (o) { return !o.quantity; })) {
-                return Promise.reject(Error('Please enter the quantity for the order.'));
-            }
-            else if (_.any(orderDocs, function (o) { return !o.plant; })) {
-                return Promise.reject(Error('Please choose a plant for the order.'));
-            }
-            return new Promise(function (resolve, reject) {
-                return _this.database.db.bulkDocs(orderDocs)
-                    .then(function (result) {
-                    var errors = [];
-                    result.forEach(function (result) {
-                        if (result.ok) {
-                            var order = orderDocs.find(function (o) { return o._id == result.id; });
-                            if (order) {
-                                order._id = result.id;
-                                order._rev = result.rev;
-                                _this.events.publish(OrdersService_1.OrdersChangedEvent);
-                            }
-                        }
-                        else if (result.error) {
-                            errors.push(result.message);
-                        }
-                    });
-                    if (errors.length) {
-                        return reject(errors);
-                    }
-                    else {
-                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
-                        return resolve(orderDocs);
-                    }
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.getAll = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.find({ selector: {
-                        type: { '$eq': order_1.OrderDocument.OrderDocumentType }
-                    } })
-                    .then(function (result) {
-                    var docs = result.docs.map(function (doc) { return new order_1.OrderDocument(doc); });
-                    resolve(docs);
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.getOne = function (id) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(id)
-                    .then(function (result) {
-                    var doc = new order_1.OrderDocument(result);
-                    resolve(doc);
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.edit = function (doc) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.put(doc)
-                    .then(function (value) {
-                    if (!value.ok) {
-                        return reject(Error('Editing the Order failed.'));
-                    }
-                    doc._rev = value.rev;
-                    _this.events.publish(OrdersService_1.OrdersChangedEvent, doc);
-                    return resolve(doc);
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.cancel = function (id) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(id)
-                    .then(function (doc) {
-                    _this.database.db.remove(doc)
-                        .then(function (delDoc) {
-                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
-                        resolve(delDoc);
-                    })
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        return OrdersService;
-    }());
-    OrdersService.OrdersChangedEvent = 'Order Changed';
-    OrdersService = OrdersService_1 = __decorate([
-        aurelia_framework_1.autoinject(),
-        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
-    ], OrdersService);
-    exports.OrdersService = OrdersService;
-    var OrdersService_1;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/services/data/recipes-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../../models/recipe", "../database"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, recipe_1, database_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var RecipesService = RecipesService_1 = (function () {
-        function RecipesService(database, events) {
-            this.database = database;
-            this.events = events;
-        }
-        RecipesService.prototype.getOne = function (id) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(id)
-                    .then(function (result) {
-                    var doc = new recipe_1.RecipeDocument(result);
-                    resolve(doc);
-                })
-                    .catch(reject);
-            });
-        };
-        RecipesService.prototype.getAll = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.find({ selector: { type: recipe_1.RecipeDocument.RecipeDocumentType } })
-                    .then(function (result) {
-                    var docs = result.docs.map(function (doc) { return new recipe_1.RecipeDocument(doc); });
-                    resolve(docs);
-                })
-                    .catch(reject);
-            });
-        };
-        RecipesService.prototype.save = function (recipe) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var doc = new recipe_1.RecipeDocument(recipe), json = doc.toJSON(), result = {
-                    ok: true,
-                    errors: []
-                };
-                if (!doc.name) {
-                    result.ok = false;
-                    result.errors.push('The Recipe Name is required.');
-                }
-                if (!doc.plant && !doc.zone) {
-                    result.ok = false;
-                    result.errors.push('Please choose a plant or a zone.');
-                }
-                if (Array.isArray(doc.tasks) && doc.tasks.some(function (t) { return !t.name; })) {
-                    result.ok = false;
-                    result.errors.push('Please enter a name for the task.');
-                }
-                if (Array.isArray(doc.tasks) && doc.tasks.some(function (t) { return !t.workType; })) {
-                    result.ok = false;
-                    result.errors.push('Please choose the Type for the task.');
-                }
-                if (!result.ok) {
-                    return resolve(result);
-                }
-                if (doc.isNew) {
-                    return _this.database.db.post(json)
-                        .then(function (response) {
-                        if (response.ok) {
-                            doc._id = response.id;
-                            doc._rev = response.rev;
-                            result.recipe = doc;
-                            _this.events.publish(RecipesService_1.RecipesChangedEvent);
-                            resolve(result);
-                        }
-                        return reject(Error('Recipe was not saved.'));
-                    })
-                        .catch(reject);
-                }
-                else {
-                    return _this.database.db.put(json)
-                        .then(function (response) {
-                        if (response.ok) {
-                            doc._rev = response.rev;
-                            result.recipe = doc;
-                            _this.events.publish(RecipesService_1.RecipesChangedEvent);
-                            resolve(result);
-                        }
-                        return reject(Error('Recipe was not saved.'));
-                    })
-                        .catch(reject);
-                }
-            });
-        };
-        RecipesService.prototype.delete = function (recipe) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var result = {
-                    ok: true,
-                    errors: [],
-                    recipe: recipe
-                };
-                _this.database.db.remove(recipe._id, recipe._rev)
-                    .then(function (response) {
-                    if (response.ok) {
-                        _this.events.publish(RecipesService_1.RecipesChangedEvent);
-                        return resolve(result);
-                    }
-                    return reject(response);
-                })
-                    .catch(reject);
-            });
-        };
-        return RecipesService;
-    }());
-    RecipesService.RecipesChangedEvent = 'Recipes changed';
-    RecipesService = RecipesService_1 = __decorate([
-        aurelia_framework_1.autoinject,
-        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
-    ], RecipesService);
-    exports.RecipesService = RecipesService;
-    var RecipesService_1;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/services/data/reference-service',["require", "exports", "aurelia-framework", "../database"], function (require, exports, aurelia_framework_1, database_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var PlantsKey = 'plants';
-    var CustomersKey = 'customers';
-    var SeasonsKey = 'seasons';
-    var PropagationTimesKey = 'propagation-times';
-    var FlowerTimesKey = 'flower-times';
-    var ReferenceService = (function () {
-        function ReferenceService(database) {
-            this.database = database;
-        }
-        ReferenceService.prototype.customers = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(CustomersKey)
-                    .then(function (result) {
-                    var customers = _.sortBy(result.customers, function (customer) { return customer.name.toLowerCase(); });
-                    resolve(customers);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.plants = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PlantsKey)
-                    .then(function (result) {
-                    var plants = _.sortBy(result.plants, function (plant) { return plant.crop.toLowerCase() + plant.size; });
-                    plants.forEach(function (plant, index) {
-                        if (typeof plant.id === 'undefined')
-                            plant.id = index;
-                    });
-                    resolve(plants);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.savePlant = function (plant, seasons, propagationTimes, flowerTimes) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PlantsKey)
-                    .then(function (plantsResult) {
-                    var plants = plantsResult.plants, index = _.findIndex(plants, function (p) { return p.id === plant.id; });
-                    if (index === -1) {
-                        plant.id = _.max(plants, function (p) { return p.id; }).id + 1;
-                        plantsResult.plants.push(plant);
-                    }
-                    else {
-                        plantsResult.plants[index] = plant;
-                    }
-                    _this.database.db.put(plantsResult)
-                        .then(function (saveResult) {
-                        Promise.all([
-                            _this.saveSeasons(seasons, plants),
-                            _this.savePropagationTimes(propagationTimes, plants),
-                            _this.saveFlowerTimes(flowerTimes, plants)
-                        ]).then(function () {
-                            resolve(saveResult);
-                        })
-                            .catch(reject);
-                    })
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.deletePlant = function (plant) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PlantsKey)
-                    .then(function (result) {
-                    var plants = result.plants, index = _.findIndex(plants, function (p) { return p.id === plant.id; });
-                    if (index !== -1) {
-                        result.plants.splice(index, 1);
-                    }
-                    _this.database.db.put(result)
-                        .then(resolve)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.zones = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get('zones')
-                    .then(function (result) {
-                    resolve(result.zones);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.seasons = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(SeasonsKey)
-                    .then(function (result) {
-                    resolve(result.seasons);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.saveSeasons = function (seasons, plants) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(SeasonsKey)
-                    .then(function (seasonsResult) {
-                    var existingSeasons = seasonsResult.seasons;
-                    seasons.forEach(function (season) {
-                        var index = existingSeasons.findIndex(function (s) { return s.year === season.year && s.name === season.name; }), dbSeason = index === -1 ? {
-                            name: season.name,
-                            year: season.year,
-                            week: plants.reduce(function (memo, plant) {
-                                memo[plant.crop] = 0;
-                                return memo;
-                            }, {})
-                        } : _.clone(existingSeasons[index]);
-                        if (typeof dbSeason.week === 'number') {
-                            dbSeason.week = plants.reduce(function (memo, plant) {
-                                memo[plant.crop] = dbSeason.week;
-                                return memo;
-                            }, {});
-                        }
-                        _.extend(dbSeason.week, season.week);
-                        if (index === -1) {
-                            existingSeasons.push(dbSeason);
-                        }
-                        else {
-                            existingSeasons[index] = dbSeason;
-                        }
-                    });
-                    _this.database.db.put(seasonsResult)
-                        .then(resolve)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.weeks = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get('zones')
-                    .then(function (result) {
-                    var zones = _.reduce(result.zones, function (memo, zone) {
-                        memo[zone.name] = {
-                            zone: zone,
-                            tables: zone.tables,
-                            available: zone.tables
-                        };
-                        return memo;
-                    }, {}), start = moment().subtract(1, 'year'), returnValue = _.chain(_.range(0, 200))
-                        .map(function (idx) {
-                        var date = start.clone().add(idx, 'weeks');
-                        return {
-                            _id: date.toWeekNumberId(),
-                            year: date.isoWeekYear(),
-                            week: date.isoWeek(),
-                            zones: zones
-                        };
-                    })
-                        .value();
-                    resolve(returnValue);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.propagationTimes = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PropagationTimesKey)
-                    .then(function (result) {
-                    resolve(result.propagationTimes);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.savePropagationTimes = function (propagationTimes, plants) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PropagationTimesKey)
-                    .then(function (propTimesResult) {
-                    var existingPropTimes = propTimesResult.propagationTimes;
-                    propagationTimes.forEach(function (propTime) {
-                        var index = existingPropTimes.findIndex(function (pt) { return pt.plant === propTime.plant && pt.year === propTime.year; });
-                        if (index === -1) {
-                            existingPropTimes.push(_.clone(propTime));
-                        }
-                        else {
-                            _.extend(existingPropTimes[index], propTime);
-                        }
-                    });
-                    _this.database.db.put(propTimesResult)
-                        .then(resolve)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.flowerTimes = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(FlowerTimesKey)
-                    .then(function (result) {
-                    resolve(result.flowerTimes);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.saveFlowerTimes = function (flowerTimes, plants) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(FlowerTimesKey)
-                    .then(function (flowerTimesResult) {
-                    var existingFlowerTimes = flowerTimesResult.flowerTimes;
-                    flowerTimes.forEach(function (flowerTime) {
-                        var index = existingFlowerTimes.findIndex(function (pt) { return pt.plant === flowerTime.plant && pt.year === flowerTime.year; });
-                        if (index === -1) {
-                            existingFlowerTimes.push(_.clone(flowerTime));
-                        }
-                        else {
-                            _.extend(existingFlowerTimes[index], flowerTime);
-                        }
-                    });
-                    _this.database.db.put(flowerTimesResult)
-                        .then(resolve)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        return ReferenceService;
-    }());
-    ReferenceService = __decorate([
-        aurelia_framework_1.autoinject(),
-        __metadata("design:paramtypes", [database_1.Database])
-    ], ReferenceService);
-    exports.ReferenceService = ReferenceService;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/services/data/users-service',["require", "exports", "aurelia-framework", "aurelia-fetch-client", "../configuration", "../authentication"], function (require, exports, aurelia_framework_1, aurelia_fetch_client_1, configuration_1, authentication_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var UsersService = (function () {
-        function UsersService(auth, config, httpClient) {
-            this.auth = auth;
-            this.config = config;
-            this.httpClient = httpClient;
-        }
-        UsersService.prototype.getAll = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var name = _this.auth.userInfo.name, pass = _this.auth.userInfo.password, key = btoa(name + ":" + pass), headers = { Authorization: "Basic " + key }, url = _this.config.remote_server + "/_users/_design/user-filters/_view/boekestyn-users";
-                return _this.httpClient.fetch(url, { headers: headers })
-                    .then(function (result) {
-                    if (result.ok) {
-                        return result.json()
-                            .then(function (json) {
-                            var users = json.rows.map(function (r) { return r.value; });
-                            return resolve(users);
-                        })
-                            .catch(reject);
-                    }
-                    return result.json()
-                        .then(reject)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        return UsersService;
-    }());
-    UsersService = __decorate([
-        aurelia_framework_1.autoinject,
-        __metadata("design:paramtypes", [authentication_1.Authentication, configuration_1.Configuration, aurelia_fetch_client_1.HttpClient])
-    ], UsersService);
-    exports.UsersService = UsersService;
 });
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -3190,6 +2394,802 @@ define('resources/services/domain/zone-detail-service',["require", "exports", "a
         __metadata("design:paramtypes", [reference_service_1.ReferenceService])
     ], ZoneDetailService);
     exports.ZoneDetailService = ZoneDetailService;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+define('resources/services/data/activities-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../database", "../../models/activity", "../../models/recipe"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, database_1, activity_1, recipe_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var ActivitiesService = ActivitiesService_1 = (function () {
+        function ActivitiesService(database, events) {
+            this.database = database;
+            this.events = events;
+        }
+        ActivitiesService.prototype.getOne = function (id) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(id)
+                    .then(function (result) {
+                    var doc = new activity_1.ActivityDocument(result);
+                    resolve(doc);
+                })
+                    .catch(reject);
+            });
+        };
+        ActivitiesService.prototype.getAll = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.find({ selector: { type: activity_1.ActivityDocument.ActivityDocumentType } })
+                    .then(function (result) {
+                    var docs = result.docs.map(function (doc) { return new activity_1.ActivityDocument(doc); });
+                    resolve(docs);
+                })
+                    .catch(reject);
+            });
+        };
+        ActivitiesService.prototype.find = function (filter) {
+            return __awaiter(this, void 0, void 0, function () {
+                var result, docs, e_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4, this.database.db.find(filter)];
+                        case 1:
+                            result = _a.sent(), docs = result.docs.map(function (doc) { return new activity_1.ActivityDocument(doc); });
+                            return [2, docs];
+                        case 2:
+                            e_1 = _a.sent();
+                            throw e_1;
+                        case 3: return [2];
+                    }
+                });
+            });
+        };
+        ActivitiesService.prototype.save = function (activity) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var doc = new activity_1.ActivityDocument(activity), json = doc.toJSON(), result = {
+                    ok: true,
+                    errors: []
+                };
+                if (!doc.name) {
+                    result.ok = false;
+                    result.errors.push('The Activity Name is required.');
+                }
+                if (!doc.date || !moment(doc.date).isValid()) {
+                    result.ok = false;
+                    result.errors.push('Please choose a valid due date.');
+                }
+                if (activity_1.ActivityStatuses.equals(doc.status, activity_1.ActivityStatuses.Incomplete) && doc.journal && !doc.journal.notes) {
+                    result.ok = false;
+                    result.errors.push('Please enter the reason the activity was Incomplete.');
+                }
+                if (!result.ok) {
+                    return resolve(result);
+                }
+                if (doc.isNew) {
+                    return _this.database.db.post(json)
+                        .then(function (response) {
+                        if (response.ok) {
+                            doc._id = response.id;
+                            doc._rev = response.rev;
+                            result.activity = doc;
+                            _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
+                            resolve(result);
+                        }
+                        return reject(Error('Activity was not saved.'));
+                    })
+                        .catch(reject);
+                }
+                else {
+                    return _this.database.db.put(json)
+                        .then(function (response) {
+                        if (response.ok) {
+                            doc._rev = response.rev;
+                            result.activity = doc;
+                            _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
+                            resolve(result);
+                        }
+                        return reject(Error('Activity was not saved.'));
+                    })
+                        .catch(reject);
+                }
+            });
+        };
+        ActivitiesService.prototype.delete = function (activity) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var result = {
+                    ok: true,
+                    errors: [],
+                    activity: activity
+                };
+                _this.database.db.remove(activity._id, activity._rev)
+                    .then(function (response) {
+                    if (response.ok) {
+                        _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
+                        return resolve(result);
+                    }
+                    return reject(response);
+                })
+                    .catch(reject);
+            });
+        };
+        ActivitiesService.prototype.byCrop = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.query('filters/activities-by-crop')
+                    .then(function (result) {
+                    var rows = result.rows;
+                    if (!rows || !rows.length)
+                        return resolve([]);
+                    var response = rows[0].value, keys = Object.keys(response), returnValue = [];
+                    for (var _i = 0, _a = keys.sort(); _i < _a.length; _i++) {
+                        var key = _a[_i];
+                        var item = { crop: key, activities: response[key] };
+                        returnValue.push(item);
+                    }
+                    resolve(returnValue);
+                })
+                    .catch(reject);
+            });
+        };
+        ActivitiesService.prototype.byRecipe = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.find({ selector: {
+                        type: { '$eq': recipe_1.RecipeDocument.RecipeDocumentType }
+                    } })
+                    .then(function (recipesResult) {
+                    var recipes = recipesResult.docs.reduce(function (memo, doc) {
+                        memo[doc._id] = doc;
+                        return memo;
+                    }, {});
+                    _this.database.db.query('filters/activities-by-recipe')
+                        .then(function (result) {
+                        var rows = result.rows;
+                        if (!rows || !rows.length)
+                            return resolve([]);
+                        var response = rows[0].value, keys = Object.keys(response), returnValue = [];
+                        for (var _i = 0, _a = keys.sort(); _i < _a.length; _i++) {
+                            var key = _a[_i];
+                            var recipe = recipes[key];
+                            if (recipe) {
+                                var item = { recipe: recipe, activities: response[key] };
+                                returnValue.push(item);
+                            }
+                        }
+                        resolve(returnValue);
+                    })
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        return ActivitiesService;
+    }());
+    ActivitiesService.ActivitiesChangedEvent = 'Activities changed';
+    ActivitiesService = ActivitiesService_1 = __decorate([
+        aurelia_framework_1.autoinject,
+        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
+    ], ActivitiesService);
+    exports.ActivitiesService = ActivitiesService;
+    var ActivitiesService_1;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/services/data/orders-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../../models/order", "../database"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, order_1, database_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var OrdersService = OrdersService_1 = (function () {
+        function OrdersService(database, events) {
+            this.database = database;
+            this.events = events;
+        }
+        OrdersService.prototype.create = function (order) {
+            var _this = this;
+            var orderDoc = new order_1.OrderDocument(order).toJSON();
+            if (!orderDoc.customer) {
+                return Promise.reject(Error('Please choose a customer.'));
+            }
+            else if (!orderDoc.quantity) {
+                return Promise.reject(Error('Please enter the quantity for the order.'));
+            }
+            else if (!orderDoc.plant) {
+                return Promise.reject(Error('Please choose a plant for the order.'));
+            }
+            return new Promise(function (resolve, reject) {
+                return _this.database.db.post(orderDoc)
+                    .then(function (result) {
+                    if (result.ok) {
+                        orderDoc._id = result.id;
+                        orderDoc._rev = result.rev;
+                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
+                        resolve(orderDoc);
+                    }
+                    else {
+                        reject(new Error('Order was not saved.'));
+                    }
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.createBulk = function (orders) {
+            var _this = this;
+            var orderDocs = orders.map(function (o) { return new order_1.OrderDocument(o).toJSON(); });
+            if (_.any(orderDocs, function (o) { return !o.customer; })) {
+                return Promise.reject(Error('Please choose a customer.'));
+            }
+            else if (_.any(orderDocs, function (o) { return !o.quantity; })) {
+                return Promise.reject(Error('Please enter the quantity for the order.'));
+            }
+            else if (_.any(orderDocs, function (o) { return !o.plant; })) {
+                return Promise.reject(Error('Please choose a plant for the order.'));
+            }
+            return new Promise(function (resolve, reject) {
+                return _this.database.db.bulkDocs(orderDocs)
+                    .then(function (result) {
+                    var errors = [];
+                    result.forEach(function (result) {
+                        if (result.ok) {
+                            var order = orderDocs.find(function (o) { return o._id == result.id; });
+                            if (order) {
+                                order._id = result.id;
+                                order._rev = result.rev;
+                                _this.events.publish(OrdersService_1.OrdersChangedEvent);
+                            }
+                        }
+                        else if (result.error) {
+                            errors.push(result.message);
+                        }
+                    });
+                    if (errors.length) {
+                        return reject(errors);
+                    }
+                    else {
+                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
+                        return resolve(orderDocs);
+                    }
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.getAll = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.find({ selector: {
+                        type: { '$eq': order_1.OrderDocument.OrderDocumentType }
+                    } })
+                    .then(function (result) {
+                    var docs = result.docs.map(function (doc) { return new order_1.OrderDocument(doc); });
+                    resolve(docs);
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.getOne = function (id) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(id)
+                    .then(function (result) {
+                    var doc = new order_1.OrderDocument(result);
+                    resolve(doc);
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.edit = function (doc) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.put(doc)
+                    .then(function (value) {
+                    if (!value.ok) {
+                        return reject(Error('Editing the Order failed.'));
+                    }
+                    doc._rev = value.rev;
+                    _this.events.publish(OrdersService_1.OrdersChangedEvent, doc);
+                    return resolve(doc);
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.cancel = function (id) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(id)
+                    .then(function (doc) {
+                    _this.database.db.remove(doc)
+                        .then(function (delDoc) {
+                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
+                        resolve(delDoc);
+                    })
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        return OrdersService;
+    }());
+    OrdersService.OrdersChangedEvent = 'Order Changed';
+    OrdersService = OrdersService_1 = __decorate([
+        aurelia_framework_1.autoinject(),
+        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
+    ], OrdersService);
+    exports.OrdersService = OrdersService;
+    var OrdersService_1;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/services/data/recipes-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../../models/recipe", "../database"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, recipe_1, database_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var RecipesService = RecipesService_1 = (function () {
+        function RecipesService(database, events) {
+            this.database = database;
+            this.events = events;
+        }
+        RecipesService.prototype.getOne = function (id) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(id)
+                    .then(function (result) {
+                    var doc = new recipe_1.RecipeDocument(result);
+                    resolve(doc);
+                })
+                    .catch(reject);
+            });
+        };
+        RecipesService.prototype.getAll = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.find({ selector: { type: recipe_1.RecipeDocument.RecipeDocumentType } })
+                    .then(function (result) {
+                    var docs = result.docs.map(function (doc) { return new recipe_1.RecipeDocument(doc); });
+                    resolve(docs);
+                })
+                    .catch(reject);
+            });
+        };
+        RecipesService.prototype.save = function (recipe) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var doc = new recipe_1.RecipeDocument(recipe), json = doc.toJSON(), result = {
+                    ok: true,
+                    errors: []
+                };
+                if (!doc.name) {
+                    result.ok = false;
+                    result.errors.push('The Recipe Name is required.');
+                }
+                if (!doc.plant && !doc.zone) {
+                    result.ok = false;
+                    result.errors.push('Please choose a plant or a zone.');
+                }
+                if (Array.isArray(doc.tasks) && doc.tasks.some(function (t) { return !t.name; })) {
+                    result.ok = false;
+                    result.errors.push('Please enter a name for the task.');
+                }
+                if (Array.isArray(doc.tasks) && doc.tasks.some(function (t) { return !t.workType; })) {
+                    result.ok = false;
+                    result.errors.push('Please choose the Type for the task.');
+                }
+                if (!result.ok) {
+                    return resolve(result);
+                }
+                if (doc.isNew) {
+                    return _this.database.db.post(json)
+                        .then(function (response) {
+                        if (response.ok) {
+                            doc._id = response.id;
+                            doc._rev = response.rev;
+                            result.recipe = doc;
+                            _this.events.publish(RecipesService_1.RecipesChangedEvent);
+                            resolve(result);
+                        }
+                        return reject(Error('Recipe was not saved.'));
+                    })
+                        .catch(reject);
+                }
+                else {
+                    return _this.database.db.put(json)
+                        .then(function (response) {
+                        if (response.ok) {
+                            doc._rev = response.rev;
+                            result.recipe = doc;
+                            _this.events.publish(RecipesService_1.RecipesChangedEvent);
+                            resolve(result);
+                        }
+                        return reject(Error('Recipe was not saved.'));
+                    })
+                        .catch(reject);
+                }
+            });
+        };
+        RecipesService.prototype.delete = function (recipe) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var result = {
+                    ok: true,
+                    errors: [],
+                    recipe: recipe
+                };
+                _this.database.db.remove(recipe._id, recipe._rev)
+                    .then(function (response) {
+                    if (response.ok) {
+                        _this.events.publish(RecipesService_1.RecipesChangedEvent);
+                        return resolve(result);
+                    }
+                    return reject(response);
+                })
+                    .catch(reject);
+            });
+        };
+        return RecipesService;
+    }());
+    RecipesService.RecipesChangedEvent = 'Recipes changed';
+    RecipesService = RecipesService_1 = __decorate([
+        aurelia_framework_1.autoinject,
+        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
+    ], RecipesService);
+    exports.RecipesService = RecipesService;
+    var RecipesService_1;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/services/data/reference-service',["require", "exports", "aurelia-framework", "../database"], function (require, exports, aurelia_framework_1, database_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var PlantsKey = 'plants';
+    var CustomersKey = 'customers';
+    var SeasonsKey = 'seasons';
+    var PropagationTimesKey = 'propagation-times';
+    var FlowerTimesKey = 'flower-times';
+    var ReferenceService = (function () {
+        function ReferenceService(database) {
+            this.database = database;
+        }
+        ReferenceService.prototype.customers = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(CustomersKey)
+                    .then(function (result) {
+                    var customers = _.sortBy(result.customers, function (customer) { return customer.name.toLowerCase(); });
+                    resolve(customers);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.plants = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PlantsKey)
+                    .then(function (result) {
+                    var plants = _.sortBy(result.plants, function (plant) { return plant.crop.toLowerCase() + plant.size; });
+                    plants.forEach(function (plant, index) {
+                        if (typeof plant.id === 'undefined')
+                            plant.id = index;
+                    });
+                    resolve(plants);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.savePlant = function (plant, seasons, propagationTimes, flowerTimes) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PlantsKey)
+                    .then(function (plantsResult) {
+                    var plants = plantsResult.plants, index = _.findIndex(plants, function (p) { return p.id === plant.id; });
+                    if (index === -1) {
+                        plant.id = _.max(plants, function (p) { return p.id; }).id + 1;
+                        plantsResult.plants.push(plant);
+                    }
+                    else {
+                        plantsResult.plants[index] = plant;
+                    }
+                    _this.database.db.put(plantsResult)
+                        .then(function (saveResult) {
+                        Promise.all([
+                            _this.saveSeasons(seasons, plants),
+                            _this.savePropagationTimes(propagationTimes, plants),
+                            _this.saveFlowerTimes(flowerTimes, plants)
+                        ]).then(function () {
+                            resolve(saveResult);
+                        })
+                            .catch(reject);
+                    })
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.deletePlant = function (plant) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PlantsKey)
+                    .then(function (result) {
+                    var plants = result.plants, index = _.findIndex(plants, function (p) { return p.id === plant.id; });
+                    if (index !== -1) {
+                        result.plants.splice(index, 1);
+                    }
+                    _this.database.db.put(result)
+                        .then(resolve)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.zones = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get('zones')
+                    .then(function (result) {
+                    resolve(result.zones);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.seasons = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(SeasonsKey)
+                    .then(function (result) {
+                    resolve(result.seasons);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.saveSeasons = function (seasons, plants) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(SeasonsKey)
+                    .then(function (seasonsResult) {
+                    var existingSeasons = seasonsResult.seasons;
+                    seasons.forEach(function (season) {
+                        var index = existingSeasons.findIndex(function (s) { return s.year === season.year && s.name === season.name; }), dbSeason = index === -1 ? {
+                            name: season.name,
+                            year: season.year,
+                            week: plants.reduce(function (memo, plant) {
+                                memo[plant.crop] = 0;
+                                return memo;
+                            }, {})
+                        } : _.clone(existingSeasons[index]);
+                        if (typeof dbSeason.week === 'number') {
+                            dbSeason.week = plants.reduce(function (memo, plant) {
+                                memo[plant.crop] = dbSeason.week;
+                                return memo;
+                            }, {});
+                        }
+                        _.extend(dbSeason.week, season.week);
+                        if (index === -1) {
+                            existingSeasons.push(dbSeason);
+                        }
+                        else {
+                            existingSeasons[index] = dbSeason;
+                        }
+                    });
+                    _this.database.db.put(seasonsResult)
+                        .then(resolve)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.weeks = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get('zones')
+                    .then(function (result) {
+                    var zones = _.reduce(result.zones, function (memo, zone) {
+                        memo[zone.name] = {
+                            zone: zone,
+                            tables: zone.tables,
+                            available: zone.tables
+                        };
+                        return memo;
+                    }, {}), start = moment().subtract(1, 'year'), returnValue = _.chain(_.range(0, 200))
+                        .map(function (idx) {
+                        var date = start.clone().add(idx, 'weeks');
+                        return {
+                            _id: date.toWeekNumberId(),
+                            year: date.isoWeekYear(),
+                            week: date.isoWeek(),
+                            zones: zones
+                        };
+                    })
+                        .value();
+                    resolve(returnValue);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.propagationTimes = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PropagationTimesKey)
+                    .then(function (result) {
+                    resolve(result.propagationTimes);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.savePropagationTimes = function (propagationTimes, plants) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PropagationTimesKey)
+                    .then(function (propTimesResult) {
+                    var existingPropTimes = propTimesResult.propagationTimes;
+                    propagationTimes.forEach(function (propTime) {
+                        var index = existingPropTimes.findIndex(function (pt) { return pt.plant === propTime.plant && pt.year === propTime.year; });
+                        if (index === -1) {
+                            existingPropTimes.push(_.clone(propTime));
+                        }
+                        else {
+                            _.extend(existingPropTimes[index], propTime);
+                        }
+                    });
+                    _this.database.db.put(propTimesResult)
+                        .then(resolve)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.flowerTimes = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(FlowerTimesKey)
+                    .then(function (result) {
+                    resolve(result.flowerTimes);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.saveFlowerTimes = function (flowerTimes, plants) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(FlowerTimesKey)
+                    .then(function (flowerTimesResult) {
+                    var existingFlowerTimes = flowerTimesResult.flowerTimes;
+                    flowerTimes.forEach(function (flowerTime) {
+                        var index = existingFlowerTimes.findIndex(function (pt) { return pt.plant === flowerTime.plant && pt.year === flowerTime.year; });
+                        if (index === -1) {
+                            existingFlowerTimes.push(_.clone(flowerTime));
+                        }
+                        else {
+                            _.extend(existingFlowerTimes[index], flowerTime);
+                        }
+                    });
+                    _this.database.db.put(flowerTimesResult)
+                        .then(resolve)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        return ReferenceService;
+    }());
+    ReferenceService = __decorate([
+        aurelia_framework_1.autoinject(),
+        __metadata("design:paramtypes", [database_1.Database])
+    ], ReferenceService);
+    exports.ReferenceService = ReferenceService;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/services/data/users-service',["require", "exports", "aurelia-framework", "aurelia-fetch-client", "../configuration", "../authentication"], function (require, exports, aurelia_framework_1, aurelia_fetch_client_1, configuration_1, authentication_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var UsersService = (function () {
+        function UsersService(auth, config, httpClient) {
+            this.auth = auth;
+            this.config = config;
+            this.httpClient = httpClient;
+        }
+        UsersService.prototype.getAll = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var name = _this.auth.userInfo.name, pass = _this.auth.userInfo.password, key = btoa(name + ":" + pass), headers = { Authorization: "Basic " + key }, url = _this.config.remote_server + "/_users/_design/user-filters/_view/boekestyn-users";
+                return _this.httpClient.fetch(url, { headers: headers })
+                    .then(function (result) {
+                    if (result.ok) {
+                        return result.json()
+                            .then(function (json) {
+                            var users = json.rows.map(function (r) { return r.value; });
+                            return resolve(users);
+                        })
+                            .catch(reject);
+                    }
+                    return result.json()
+                        .then(reject)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        return UsersService;
+    }());
+    UsersService = __decorate([
+        aurelia_framework_1.autoinject,
+        __metadata("design:paramtypes", [authentication_1.Authentication, configuration_1.Configuration, aurelia_fetch_client_1.HttpClient])
+    ], UsersService);
+    exports.UsersService = UsersService;
 });
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -4315,10 +4315,10 @@ define('resources/views/activities/index',["require", "exports", "aurelia-framew
                     filter.selector.$and.push({ assignedTo: { $eq: this.auth.userInfo.name } });
                 }
                 if (!this.showCompleted) {
-                    filter.selector.$and.push({ status: { $nin: [activity_1.ActivityStatuses.Incomplete, activity_1.ActivityStatuses.Incomplete.toLowerCase()] } });
+                    filter.selector.$and.push({ status: { $nin: [activity_1.ActivityStatuses.Complete, activity_1.ActivityStatuses.Complete.toLowerCase()] } });
                 }
                 if (!this.showIncomplete) {
-                    filter.selector.$and.push({ status: { $nin: [activity_1.ActivityStatuses.Complete, activity_1.ActivityStatuses.Complete.toLowerCase()] } });
+                    filter.selector.$and.push({ status: { $nin: [activity_1.ActivityStatuses.Incomplete, activity_1.ActivityStatuses.Incomplete.toLowerCase()] } });
                 }
                 if (this.week && !activity_1.WorkTypes.equals(this.workType, activity_1.WorkTypes.ALL_WORK_TYPES)) {
                     var properCase = this.workType.charAt(0).toUpperCase() + this.workType.substr(1).toLowerCase(), lowerCase = this.workType.toLowerCase();
@@ -7190,7 +7190,7 @@ define('resources/services/domain/models/calculator-zone',["require", "exports",
     exports.CalculatorZone = CalculatorZone;
 });
 
-define('text!resources/../../package.json',[],function () { return '{\r\n  "name": "GreenRP",\r\n  "description": "The Greenhouse Resource Planning application for Boekestyn Greenhouses.",\r\n  "publisher": "Resounding Software",\r\n  "version": "1.8.1",\r\n  "repository": {\r\n    "type": "git",\r\n    "url": "https://github.com/Resounding/GreenRP"\r\n  },\r\n  "license": "MIT",\r\n  "dependencies": {\r\n    "aurelia-animator-css": "^1.0.2",\r\n    "aurelia-bootstrapper": "^2.1.1",\r\n    "aurelia-dialog": "^1.0.0-rc.1.0.3",\r\n    "aurelia-fetch-client": "^1.1.2",\r\n    "aurelia-pal": "^1.3.0",\r\n    "bluebird": "^3.5.0",\r\n    "crypto-js": "^3.1.9-1",\r\n    "gulp": "gulpjs/gulp#4.0",\r\n    "jquery": "^3.1.0",\r\n    "moment": "^2.18.1",\r\n    "numeral": "^2.0.6",\r\n    "pouchdb": "^6.3.4",\r\n    "pouchdb-find": "^6.3.4",\r\n    "requirejs": "^2.3.3",\r\n    "semantic-ui-calendar": "^0.0.8",\r\n    "semantic-ui-css": "^2.2.10",\r\n    "text": "github:requirejs/text#latest",\r\n    "toastr": "^2.1.2",\r\n    "underscore": "^1.8.3",\r\n    "whatwg-fetch": "^2.0.3"\r\n  },\r\n  "peerDependencies": {},\r\n  "devDependencies": {\r\n    "@types/moment": "^2.13.0",\r\n    "@types/node": "^6.0.45",\r\n    "@types/numeral": "^0.0.19",\r\n    "@types/pouchdb-core": "^6.0.2",\r\n    "@types/pouchdb-find": "^0.10.0",\r\n    "@types/underscore": "^1.7.36",\r\n    "@types/whatwg-fetch": "^0.0.33",\r\n    "aurelia-cli": "^0.30.0",\r\n    "aurelia-testing": "^1.0.0-beta.3.0.1",\r\n    "aurelia-tools": "^1.0.0",\r\n    "browser-sync": "^2.13.0",\r\n    "connect-history-api-fallback": "^1.2.0",\r\n    "event-stream": "^3.3.3",\r\n    "gulp": "gulpjs/gulp#4.0",\r\n    "gulp-changed-in-place": "^2.0.3",\r\n    "gulp-less": "^3.1.0",\r\n    "gulp-notify": "^2.2.0",\r\n    "gulp-rename": "^1.2.2",\r\n    "gulp-sourcemaps": "^2.0.0-alpha",\r\n    "gulp-tslint": "^5.0.0",\r\n    "gulp-typescript": "^3.1.4",\r\n    "jasmine-core": "^2.4.1",\r\n    "karma": "^0.13.22",\r\n    "karma-chrome-launcher": "^1.0.1",\r\n    "karma-jasmine": "^1.0.2",\r\n    "karma-typescript-preprocessor": "^0.2.1",\r\n    "tslint": "^3.11.0",\r\n    "typescript": "^2.3.1",\r\n    "typings": "^2.1.1",\r\n    "uglify-js": "^2.6.3"\r\n  }\r\n}\r\n';});
+define('text!resources/../../package.json',[],function () { return '{\r\n  "name": "GreenRP",\r\n  "description": "The Greenhouse Resource Planning application for Boekestyn Greenhouses.",\r\n  "publisher": "Resounding Software",\r\n  "version": "1.8.2",\r\n  "repository": {\r\n    "type": "git",\r\n    "url": "https://github.com/Resounding/GreenRP"\r\n  },\r\n  "license": "MIT",\r\n  "dependencies": {\r\n    "aurelia-animator-css": "^1.0.2",\r\n    "aurelia-bootstrapper": "^2.1.1",\r\n    "aurelia-dialog": "^1.0.0-rc.1.0.3",\r\n    "aurelia-fetch-client": "^1.1.2",\r\n    "aurelia-pal": "^1.3.0",\r\n    "bluebird": "^3.5.0",\r\n    "crypto-js": "^3.1.9-1",\r\n    "gulp": "gulpjs/gulp#4.0",\r\n    "jquery": "^3.1.0",\r\n    "moment": "^2.18.1",\r\n    "numeral": "^2.0.6",\r\n    "pouchdb": "^6.3.4",\r\n    "pouchdb-find": "^6.3.4",\r\n    "requirejs": "^2.3.3",\r\n    "semantic-ui-calendar": "^0.0.8",\r\n    "semantic-ui-css": "^2.2.10",\r\n    "text": "github:requirejs/text#latest",\r\n    "toastr": "^2.1.2",\r\n    "underscore": "^1.8.3",\r\n    "whatwg-fetch": "^2.0.3"\r\n  },\r\n  "peerDependencies": {},\r\n  "devDependencies": {\r\n    "@types/moment": "^2.13.0",\r\n    "@types/node": "^6.0.45",\r\n    "@types/numeral": "^0.0.19",\r\n    "@types/pouchdb-core": "^6.0.2",\r\n    "@types/pouchdb-find": "^0.10.0",\r\n    "@types/underscore": "^1.7.36",\r\n    "@types/whatwg-fetch": "^0.0.33",\r\n    "aurelia-cli": "^0.30.0",\r\n    "aurelia-testing": "^1.0.0-beta.3.0.1",\r\n    "aurelia-tools": "^1.0.0",\r\n    "browser-sync": "^2.13.0",\r\n    "connect-history-api-fallback": "^1.2.0",\r\n    "event-stream": "^3.3.3",\r\n    "gulp": "gulpjs/gulp#4.0",\r\n    "gulp-changed-in-place": "^2.0.3",\r\n    "gulp-less": "^3.1.0",\r\n    "gulp-notify": "^2.2.0",\r\n    "gulp-rename": "^1.2.2",\r\n    "gulp-sourcemaps": "^2.0.0-alpha",\r\n    "gulp-tslint": "^5.0.0",\r\n    "gulp-typescript": "^3.1.4",\r\n    "jasmine-core": "^2.4.1",\r\n    "karma": "^0.13.22",\r\n    "karma-chrome-launcher": "^1.0.1",\r\n    "karma-jasmine": "^1.0.2",\r\n    "karma-typescript-preprocessor": "^0.2.1",\r\n    "tslint": "^3.11.0",\r\n    "typescript": "^2.3.1",\r\n    "typings": "^2.1.1",\r\n    "uglify-js": "^2.6.3"\r\n  }\r\n}\r\n';});
 
 define('text!resources/views/app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"styles/styles.css\"></require>\n    <require from=\"./controls/nav-bar\"></require>\n    <require from=\"./zones/zone-detail\"></require>\n    <require from=\"./weeks/week-detail\"></require>\n\n    <nav-bar router.bind=\"router\"></nav-bar>\n\n    <div class=\"pusher\">\n        <div class=\"ui main container\">\n            <router-view></router-view>\n            <footer>\n                <hr>\n                <p class=\"\" innerhtml.one-time=\"footerText\"></p>\n            </footer>\n        </div>\n    </div>\n    <div id=\"zone-detail-sidebar\" class=\"ui right sidebar super-duper wide\">\n        <zone-detail></zone-detail>\n    </div>\n    <div id=\"week-detail-sidebar\" class=\"ui right sidebar super wide\">\n        <week-detail></week-detail>\n    </div>    \n</template>\n"; });
 define('text!styles/activities.css', ['module'], function(module) { module.exports = "#activity-detail-container .button-container {\n  padding: 0;\n  display: inline-block;\n}\n#activity-detail-container .button-container.fixed {\n  transition: all 0.5s ease;\n  position: fixed;\n  padding: 1em;\n  background-color: #fff;\n}\n@media only screen and (max-width: 1199px) and (min-width: 992px) {\n  #activity-detail-container .button-container.fixed {\n    width: 933px;\n  }\n}\n#activity-detail-container.new .journal {\n  display: none;\n}\n#activities-list > .filters.expanded .button.positive {\n  margin-bottom: 10px;\n}\n@media only screen and (max-width: 767px) {\n  #activities-list > .filters.collapsed .ui.clearing.divider,\n  #activities-list > .filters.collapsed .filter-grid {\n    display: none;\n  }\n}\n#activities-list .card.in-progress {\n  background-color: rgba(223, 240, 216, 0.6);\n}\n#activities-list .card.overdue {\n  background-color: rgba(242, 222, 222, 0.6);\n}\n#activities-list .card.incomplete .header,\n#activities-list .card.complete .header {\n  opacity: 0.45;\n}\n#activities-list .card.incomplete .dropdown.icon,\n#activities-list .card.complete .dropdown.icon {\n  display: none;\n}\n"; });
@@ -7220,7 +7220,7 @@ define('text!styles/tasks.css', ['module'], function(module) { module.exports = 
 define('text!resources/views/controls/change-password.html', ['module'], function(module) { module.exports = "<template>\r\n    <ux-dialog id=\"change-password-dialog\">\r\n        <ux-dialog-header>\r\n            <h3>\r\n                <i class=\"fa fa-key\"></i>\r\n                Change Password\r\n            </h3>\r\n        </ux-dialog-header>\r\n        <ux-dialog-body>\r\n            <form class=\"ui form ${errors.length ? 'error' : ''}\">\r\n                <div class=\"field\">\r\n                    <label for=\"new\">Password:</label>\r\n                    <input id=\"new\" type=\"password\" value.bind=\"newPassword\">\r\n                </div>\r\n                <div class=\"field\">\r\n                    <label for=\"confirm\">Confirm:</label>\r\n                    <input id=\"confirm\" type=\"password\" value.bind=\"confirmPassword\">\r\n                </div>\r\n                <div class=\"ui divider\">&nbsp;</div>\r\n                <div class=\"ui error message\" show.bind=\"errors.length\">\r\n                    <div class=\"ui list\" repeat.for=\"e of errors\">\r\n                        <div class=\"item\">${e}</div>\r\n                    </div>\r\n                </div>\r\n            </form>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button class=\"ui basic button\" click.delegate=\"controller.cancel()\">Cancel</button>\r\n            <button class=\"ui basic primary button\" click.delegate=\"save()\">\r\n                <i class=\"save button icon\"></i>\r\n                Save\r\n            </button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>"; });
 define('text!styles/week-detail.css', ['module'], function(module) { module.exports = "#week-detail-sidebar {\n  margin-top: 70px !important;\n}\n#week-detail-sidebar > week-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: auto;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#week-detail-sidebar > week-detail button.close {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n  z-index: 100;\n}\n#week-detail-sidebar > week-detail div.calendar {\n  display: inline-block;\n  cursor: pointer;\n}\n#week-detail-sidebar > week-detail div.calendar.start,\n#week-detail-sidebar > week-detail div.calendar.end {\n  padding: 0.78571429em 0;\n}\n#week-detail-sidebar > week-detail .report-link {\n  padding: 0.78571429em 3px;\n  display: inline-block;\n}\n#week-detail-sidebar > week-detail .report-link:hover {\n  text-decoration: underline;\n}\n#week-detail-sidebar > week-detail .ui.form .inline.fields .field > .selection.dropdown,\n#week-detail-sidebar > week-detail .ui.form .inline.field > .selection.dropdown {\n  min-width: 100px;\n}\n#week-detail-sidebar > week-detail td.batch i {\n  float: right;\n}\n.ui[class*=\"super wide\"].left.sidebar,\n.ui[class*=\"super wide\"].right.sidebar {\n  width: 750px;\n}\n.ui.visible[class*=\"super wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-750px, 0, 0);\n  transform: translate3d(-750px, 0, 0);\n}\n"; });
 define('text!resources/views/controls/error-notification.html', ['module'], function(module) { module.exports = "<template>\r\n    <ux-dialog>\r\n        <ux-dialog-body>\r\n            <div class=\"ui segment negative message\">\r\n                <p>\r\n                    <i class=\"icon warning circle\"></i>\r\n                    ${message}\r\n                </p>\r\n            </div>\r\n        </ux-dialog-body>\r\n\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" click.trigger=\"controller.cancel()\" class=\"ui button primary\">OK</button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>\r\n"; });
-define('text!styles/zone-detail.css', ['module'], function(module) { module.exports = "#zone-detail-sidebar {\n  margin-top: 70px !important;\n}\n#zone-detail-sidebar > zone-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: auto;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#zone-detail-sidebar > zone-detail button {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n}\n.ui[class*=\"super-duper wide\"].left.sidebar,\n.ui[class*=\"super-duper wide\"].right.sidebar {\n  width: 80%;\n}\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-80%, 0, 0);\n  transform: translate3d(-80%, 0, 0);\n}\n"; });
+define('text!styles/zone-detail.css', ['module'], function(module) { module.exports = "#zone-detail-sidebar {\n  margin-top: 70px !important;\n}\n#zone-detail-sidebar > zone-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: hidden;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#zone-detail-sidebar > zone-detail button {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n}\n#zone-detail-sidebar > zone-detail > table {\n  margin-bottom: 0;\n}\n#zone-detail-sidebar > zone-detail .table-wrapper {\n  height: calc(100vh - 275px);\n  overflow-y: auto;\n}\n#zone-detail-sidebar .ui.table th,\n#zone-detail-sidebar .ui.table td {\n  width: 75px;\n}\n.ui[class*=\"super-duper wide\"].left.sidebar,\n.ui[class*=\"super-duper wide\"].right.sidebar {\n  width: 80%;\n}\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-80%, 0, 0);\n  transform: translate3d(-80%, 0, 0);\n}\n"; });
 define('text!resources/views/controls/nav-bar.html', ['module'], function(module) { module.exports = "<template>\n    <div id=\"main-menu\" class=\"ui inverted segment\" ref=\"el\">\n        <div class=\"ui container\">\n            <div class=\"ui large secondary inverted pointing menu\">\n                <a href=\"#\" class=\"item logo-item\">\n                    <img src=\"images/logo.png\" alt=\"Logo\" class=\"logo\">\n                    <span>Boekestyn Greenhouses</span>\n                </a>\n                <a repeat.for=\"item of authorizedRoutes\" href.bind=\"item.navModel.href\" class=\"item ${item.navModel.isActive? 'active' : ''}\">\n                    ${item.title}\n                </a>\n                <button type=\"button\" class=\"item\" click.delegate=\"showSearch()\" show.bind=\"canSearch\">\n                    <i class=\"icon search\"></i>\n                    Search\n                </button>\n                <button type=\"button\" class=\"item\" click.delegate=\"showCalculator()\" show.bind=\"canCreateOrders\">\n                    <i class=\"icon plus\"></i>\n                    New Order\n                </button>\n                <div class=\"ui right dropdown item\">\n                    ${userName}\n                    <i class=\"dropdown icon\"></i>\n                    <div class=\"menu\">\n                        <button type=\"button\" class=\"item\" click.delegate=\"changePassword()\">\n                            <i class=\"talk outline icon\"></i>\n                            Change Password\n                        </button>\n                        <button type=\"button\" class=\"item\" click.delegate=\"logout()\">\n                            <i class=\"sign out icon\"></i>\n                            Logout\n                        </button>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id=\"fixed-menu\" class=\"ui large top fixed menu transition hidden\">\n        <div class=\"ui container\">\n            <a href=\"#\" class=\"item logo-item\">\n                <img src=\"images/logo.png\" alt=\"Logo\" class=\"logo\">\n                <span>Boekestyn Greenhouses</span>\n            </a>\n            <a repeat.for=\"item of authorizedRoutes\" href.bind=\"item.navModel.href\" class=\"item ${item.navModel.isActive? 'active' : ''}\">\n                ${item.title}\n            </a>\n            <a class=\"item\" click.delegate=\"showSearch()\" show.bind=\"canSearch\">\n                <i class=\"icon search\"></i>\n                Search\n            </a>\n            <a class=\"item\" click.delegate=\"showCalculator()\" show.bind=\"canCreateOrders\">\n                <i class=\"icon plus\"></i>\n                New Order\n            </a>\n        </div>\n    </div>\n</template>\n"; });
 define('text!resources/views/controls/prompt.html', ['module'], function(module) { module.exports = "<template>\n    <ux-dialog>\n        <ux-dialog-body>\n            <p>${message}</p>\n        </ux-dialog-body>\n\n        <ux-dialog-footer>\n            <button type=\"button\" click.trigger=\"controller.cancel()\" class=\"ui button basic\">No</button>\n            <button type=\"button\" click.trigger=\"controller.ok()\" class=\"ui button primary\">Yes</button>\n        </ux-dialog-footer>\n    </ux-dialog>\n</template>\n"; });
 define('text!resources/views/home/index.html', ['module'], function(module) { module.exports = "<template>\n    <div class=\"segment\">\n        <div class=\"ui grid\">\n            <div class=\"four column row\">\n                <div class=\"left floated column\">\n                    <h1 class=\"ui left aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: lastYear}\">&lt; &nbsp; ${lastYear}</a>\n                    </h1>\n                </div>\n                <div class=\"column\">\n                    <h1 class=\"ui center aligned header\">${year}</h1>\n                </div>\n                <div class=\"right floated column\">\n                    <h1 class=\"ui right aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: nextYear}\">${nextYear} &nbsp; &gt;</a>\n                    </h1>\n                </div>\n            </div>\n        </div>\n\n        <table class=\"ui striped celled table\">\n            <thead>\n                <tr>\n                    <th>Week</th>\n                    <th repeat.for=\"zone of zones\" class=\"center aligned\">\n                        <button type=\"button\" class=\"ui basic button\" click.delegate=\"showZoneDetails(zone)\">${zone.name}</button>\n                    </th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr repeat.for=\"key,value of weeks\">\n                    <td>\n                        <button type=\"button\" class=\"ui basic button\" click.delegate=\"showWeekDetails(value)\">${value.week}</button>\n                    </td>\n                    <td repeat.for=\"zone of zones\">${value.zones[zone.name].available|numericFormat}</td>\n                </tr>\n            </tbody>\n        </table>\n\n        <div class=\"ui grid\">\n            <div class=\"four column row\">\n                <div class=\"left floated column\">\n                    <h1 class=\"ui left aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: lastYear}\">&lt; &nbsp; ${lastYear}</a>\n                    </h1>\n                </div>\n                <div class=\"column\">\n                    <h1 class=\"ui center aligned header\">${year}</h1>\n                </div>\n                <div class=\"right floated column\">\n                    <h1 class=\"ui right aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: nextYear}\">${nextYear} &nbsp; &gt;</a>\n                    </h1>\n                </div>\n            </div>\n        </div>\n    </div>\n</template>\n"; });
@@ -7233,5 +7233,5 @@ define('text!resources/views/recipes/task-detail.html', ['module'], function(mod
 define('text!resources/views/reports/report.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/reports.css\"></require>\r\n    \r\n    <ux-dialog id=\"report-container\" ref=\"el\">\r\n        <ux-dialog-body>\r\n            <iframe></iframe>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" class=\"ui basic button\" click.delegate=\"controller.close()\">Close</button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>"; });
 define('text!resources/views/search/search.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/search.css\"></require>\r\n    <require from=\"../controls/escape-quotes-value-converter\"></require>\r\n\r\n    <ux-dialog id=\"search\" ref=\"el\">\r\n        <ux-dialog-header>\r\n            <h2>Search</h2>\r\n            <div class=\"ui form\">\r\n                <div class=\"fields\">\r\n                    <div class=\"three wide field\">\r\n                        <label for=\"rootZones\">Root Zone:</label>\r\n                        <select id=\"rootZones\" name=\"zones\" value.bind=\"filter.rootZone\">\r\n                            <option value=\"\">All Zones</option>\r\n                            <option repeat.for=\"zone of zones\" value=\"${zone}\">${zone}</option>\r\n                        </select>\r\n                    </div>\r\n                    <div class=\"three wide field\">\r\n                            <label for=\"zones\">Zone:</label>\r\n                            <select id=\"zones\" name=\"zones\" value.bind=\"filter.zone\">\r\n                                <option value=\"\">All Zones</option>\r\n                                <option repeat.for=\"zone of zones\" value=\"${zone}\">${zone}</option>\r\n                            </select>\r\n                        </div>\r\n                    <div class=\"three wide field\">\r\n                        <label for=\"plants\">Plant:</label>\r\n                        <select id=\"plants\" name=\"plants\" value.bind=\"filter.plant\">\r\n                            <option value=\"\">All Plants</option>\r\n                            <option repeat.for=\"plant of plants\" value=\"${plant.name | escapeQuotes}\">${plant.name}</option>\r\n                        </select>\r\n                    </div>\r\n                    <div class=\"three wide field\">\r\n                        <label for=\"crops\">Crop:</label>\r\n                        <select id=\"crops\" name=\"crops\" value.bind=\"filter.crop\">\r\n                            <option value=\"\">All Crops</option>\r\n                            <option repeat.for=\"crop of crops\" value=\"${crop}\">${crop}</option>\r\n                        </select>\r\n                    </div>\r\n                    <div class=\"four wide field\">\r\n                        <label for=\"customers\">Customer:</label>\r\n                        <select id=\"customers\" name=\"customers\" value.bind=\"filter.customer\">\r\n                            <option value=\"\">All Customers</option>\r\n                            <option repeat.for=\"customer of customers\" value=\"${customer}\">${customer}</option>\r\n                        </select>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n        </ux-dialog-header>\r\n        <ux-dialog-body>\r\n            <table class=\"ui table\">\r\n                <thead>\r\n                    <tr>\r\n                        <th>\r\n                            <button type=\"button\" class=\"ui basic button fluid\" click.delegate=\"sortBy('batch')\">\r\n                                Batch\r\n                                <i class=\"sort ${filter.sortDirection} icon\" show.bind=\"filter.sortBy=='batch'\"></i>\r\n                            </button>\r\n                        </th>\r\n                        <th>\r\n                            <button type=\"button\" class=\"ui basic button fluid\" click.delegate=\"sortBy('plant')\">\r\n                                Plant\r\n                                <i class=\"sort ${filter.sortDirection} icon\" show.bind=\"filter.sortBy=='plant'\"></i>\r\n                            </button>\r\n                        </th>\r\n                        <th>\r\n                            <button type=\"button\" class=\"ui basic button fluid\" click.delegate=\"sortBy('rootZone')\">\r\n                                Root Zone\r\n                                <i class=\"sort ${filter.sortDirection} icon\" show.bind=\"filter.sortBy=='rootZone'\"></i>\r\n                            </button>\r\n                        </th>\r\n                        <th>\r\n                            <button type=\"button\" class=\"ui basic button fluid\" click.delegate=\"sortBy('zone')\">\r\n                                Zone\r\n                                <i class=\"sort ${filter.sortDirection} icon\" show.bind=\"filter.sortBy=='zone'\"></i>\r\n                            </button>\r\n                        </th>\r\n                        <th class=\"right aligned\" colspan=\"2\">\r\n                            <button type=\"button\" class=\"ui basic button fluid\" click.delegate=\"sortBy('pots')\">\r\n                                Pots / Cases\r\n                                <i class=\"sort ${filter.sortDirection} icon\" show.bind=\"filter.sortBy=='pots'\"></i>\r\n                            </button>\r\n                        </th>\r\n                        <th class=\"center aligned\">\r\n                            <button type=\"button\" class=\"ui basic button fluid\" click.delegate=\"sortBy('stickDate')\">\r\n                                Stick\r\n                                <i class=\"sort ${filter.sortDirection} icon\" show.bind=\"filter.sortBy=='stickDate'\"></i>\r\n                            </button>\r\n                        </th>\r\n                        <th class=\"center aligned\">\r\n                            <button type=\"button\" class=\"ui basic button fluid\" click.delegate=\"sortBy('flowerDate')\">\r\n                                Flower\r\n                                <i class=\"sort ${filter.sortDirection} icon\" show.bind=\"filter.sortBy=='flowerDate'\"></i>\r\n                            </button>\r\n                        </th>\r\n                        <th class=\"center aligned\">\r\n                            <button type=\"button\" class=\"ui basic button fluid\" click.delegate=\"sortBy('shipDate')\">\r\n                                Ship\r\n                                <i class=\"sort ${filter.sortDirection} icon\" show.bind=\"filter.sortBy=='shipDate'\"></i>\r\n                            </button>\r\n                        </th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr repeat.for=\"order of orders\">\r\n                        <td class=\"batch\">\r\n                            <a click.delegate=\"detail(order.order)\">${order.batch}</a>\r\n                        </td>\r\n                        <td>${order.plant}</td>\r\n                        <td class=\"center aligned\">\r\n                            ${order.rootZone}\r\n                        </td>\r\n                        <td class=\"center aligned\">\r\n                            ${order.zone}\r\n                        </td>\r\n                        <td class=\"right aligned\">${order.pots|numericFormat}</td>\r\n                        <td class=\"right aligned\">${order.cases|numericFormat}</td>\r\n                        <td class=\"center aligned\">${order.stickDateString}</td>\r\n                        <td class=\"center aligned\">${order.flowerDateString}</td>\r\n                        <td class=\"center aligned\">${order.shipDateString}</td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" class=\"basic ui button\" click.delegate=\"controller.cancel()\">Close</button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>"; });
 define('text!resources/views/weeks/week-detail.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/week-detail.css\"></require>\r\n\r\n    <button type=\"button\" class=\"ui icon button red close\" click.delegate=\"close()\">\r\n        <i class=\"close icon\"></i>\r\n    </button>\r\n\r\n    <div class=\"ui form\" ref=\"el\">\r\n        <div class=\"fields\">\r\n            <div class=\"inline field\">\r\n                <label>Dates:</label>\r\n                <div class=\"calendar start\">\r\n                    <span class=\"date-display\">${startDateDisplay}</span>\r\n                </div>\r\n                &ndash;\r\n                <div class=\"calendar end\">\r\n                    <span class=\"date-display\">${endDateDisplay}</span>\r\n                </div>\r\n            </div>\r\n            <div class=\"inline field\">\r\n                <label for=\"zones\">Zone:</label>\r\n                <select id=\"zones\" name=\"zones\" value.bind=\"filter.zone\">\r\n                    <option value=\"\">All Zones</option>\r\n                    <option repeat.for=\"zone of zones\" value=\"${zone}\">${zone}</option>\r\n                </select>\r\n            </div>\r\n            <div class=\"field\">\r\n                <button type=\"button\" class=\"ui basic secondary button\" click.delegate=\"openFlowerThisWeekReport()\">\r\n                    <i class=\"file pdf outline icon\"></i>\r\n                    Flowering\r\n                </button>\r\n\r\n                <button type=\"button\" class=\"ui basic secondary button\" click.delegate=\"openPlantThisWeekReport()\">\r\n                    <i class=\"file pdf outline icon\"></i>\r\n                    Planting\r\n                </button>\r\n            </div>\r\n        </div>\r\n    </div>\r\n\r\n    <table class=\"ui table\">\r\n        <thead>\r\n            <tr>\r\n                <th>Batch</th>\r\n                <th>Plant</th>\r\n                <th>Zone</th>\r\n                <th class=\"right aligned\">Pots</th>\r\n                <th class=\"right aligned\">Cases</th>\r\n                <th class=\"center aligned\">Tables</th>\r\n                <th class=\"center aligned\">Flower Date</th>\r\n                <th class=\"center aligned\">Ship Week</th>\r\n            </tr>\r\n        </thead>\r\n        <tbody>\r\n            <tr repeat.for=\"order of orders\" class=\"${order.isShippingThisWeek ? 'positive' : ''}\">\r\n                <td class=\"batch\">\r\n                    <a click.delegate=\"detail(order.order)\">${order.batch}</a>\r\n                    <i class=\"truck icon\" show.bind=\"order.isShippingThisWeek\" title=\"This orders ships this week\"></i>\r\n                    <i class=\"icon\" show.bind=\"order.isFloweringThisWeek\" title=\"This orders flowers this week\">\r\n                        <img src=\"images/gerbera.png\">\r\n                    </i>\r\n                </td>\r\n                <td>${order.plant}</td>\r\n                <td>${order.zone}</td>\r\n                <td class=\"right aligned\">${order.pots|numericFormat}</td>\r\n                <td class=\"right aligned\">${order.cases|numericFormat}</td>\r\n                <td class=\"center aligned\">${order.tables|numericFormat}</td>\r\n                <td class=\"center aligned\">${order.flowerDate}</td>\r\n                <td class=\"center aligned\">${order.shipWeek}</td>\r\n            </tr>\r\n        </tbody>\r\n    </table>\r\n</template>\r\n"; });
-define('text!resources/views/zones/zone-detail.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"styles/zone-detail.css\"></require>\n\n    <button type=\"button\" class=\"ui icon button red\" click.delegate=\"close()\">\n        <i class=\"close icon\"></i>\n    </button>\n\n    <h1>Zone ${model.zone.name} Details</h1>\n\n    <table class=\"ui table\">\n        <thead>\n            <tr>\n                <th>Week</th>\n                <th class=\"center aligned\" repeat.for=\"plant of model.plants\">${plant}</th>\n                <th class=\"center aligned\">Available</th>\n            </tr>\n        </thead>\n        <tbody>\n            <tr repeat.for=\"week of model.weeks\">\n                <td>${week.weekNumber}</td>\n                <td class=\"center aligned\" repeat.for=\"plant of week.plants\">${plant}</td>\n                <td class=\"center aligned\">${week.available}</td>\n            </tr>\n        </tbody>\n    </table>\n</template>\n"; });
+define('text!resources/views/zones/zone-detail.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"styles/zone-detail.css\"></require>\n\n    <button type=\"button\" class=\"ui icon button red\" click.delegate=\"close()\">\n        <i class=\"close icon\"></i>\n    </button>\n\n    <h1>Zone ${model.zone.name} Details</h1>\n\n    <table class=\"ui table\">\n        <thead>\n            <tr>\n                <th>Week</th>\n                <th class=\"center aligned\" repeat.for=\"plant of model.plants\">${plant}</th>\n                <th class=\"center aligned\">Available</th>\n            </tr>\n        </thead>\n    </table>\n    <div class=\"table-wrapper\">\n        <table class=\"ui table\">\n            <tbody>\n                <tr repeat.for=\"week of model.weeks\">\n                    <td>${week.weekNumber}</td>\n                    <td class=\"center aligned\" repeat.for=\"plant of week.plants\">${plant}</td>\n                    <td class=\"center aligned\">${week.available}</td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n</template>\n"; });
 //# sourceMappingURL=app-bundle.js.map
