@@ -1368,6 +1368,800 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+define('resources/services/data/activities-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../database", "../../models/activity", "../../models/recipe"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, database_1, activity_1, recipe_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var ActivitiesService = ActivitiesService_1 = (function () {
+        function ActivitiesService(database, events) {
+            this.database = database;
+            this.events = events;
+        }
+        ActivitiesService.prototype.getOne = function (id) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(id)
+                    .then(function (result) {
+                    var doc = new activity_1.ActivityDocument(result);
+                    resolve(doc);
+                })
+                    .catch(reject);
+            });
+        };
+        ActivitiesService.prototype.getAll = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.query('filters/activities', { include_docs: true })
+                    .then(function (result) {
+                    var docs = result.rows.map(function (row) { return new activity_1.ActivityDocument(row.doc); });
+                    resolve(docs);
+                })
+                    .catch(reject);
+            });
+        };
+        ActivitiesService.prototype.find = function (filter) {
+            return __awaiter(this, void 0, void 0, function () {
+                var result, docs, e_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4, this.database.db.find(filter)];
+                        case 1:
+                            result = _a.sent(), docs = result.docs.map(function (doc) { return new activity_1.ActivityDocument(doc); });
+                            return [2, docs];
+                        case 2:
+                            e_1 = _a.sent();
+                            throw e_1;
+                        case 3: return [2];
+                    }
+                });
+            });
+        };
+        ActivitiesService.prototype.save = function (activity) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var doc = new activity_1.ActivityDocument(activity), json = doc.toJSON(), result = {
+                    ok: true,
+                    errors: []
+                };
+                if (!doc.name) {
+                    result.ok = false;
+                    result.errors.push('The Activity Name is required.');
+                }
+                if (!doc.date || !moment(doc.date).isValid()) {
+                    result.ok = false;
+                    result.errors.push('Please choose a valid due date.');
+                }
+                if (activity_1.ActivityStatuses.equals(doc.status, activity_1.ActivityStatuses.Incomplete) && doc.journal && !doc.journal.notes) {
+                    result.ok = false;
+                    result.errors.push('Please enter the reason the activity was Incomplete.');
+                }
+                if (!result.ok) {
+                    return resolve(result);
+                }
+                if (doc.isNew) {
+                    return _this.database.db.post(json)
+                        .then(function (response) {
+                        if (response.ok) {
+                            doc._id = response.id;
+                            doc._rev = response.rev;
+                            result.activity = doc;
+                            _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
+                            resolve(result);
+                        }
+                        return reject(Error('Activity was not saved.'));
+                    })
+                        .catch(reject);
+                }
+                else {
+                    return _this.database.db.put(json)
+                        .then(function (response) {
+                        if (response.ok) {
+                            doc._rev = response.rev;
+                            result.activity = doc;
+                            _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
+                            resolve(result);
+                        }
+                        return reject(Error('Activity was not saved.'));
+                    })
+                        .catch(reject);
+                }
+            });
+        };
+        ActivitiesService.prototype.delete = function (activity) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var result = {
+                    ok: true,
+                    errors: [],
+                    activity: activity
+                };
+                _this.database.db.remove(activity._id, activity._rev)
+                    .then(function (response) {
+                    if (response.ok) {
+                        _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
+                        return resolve(result);
+                    }
+                    return reject(response);
+                })
+                    .catch(reject);
+            });
+        };
+        ActivitiesService.prototype.byCrop = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.query('filters/activities-by-crop')
+                    .then(function (result) {
+                    var rows = result.rows;
+                    if (!rows || !rows.length)
+                        return resolve([]);
+                    var response = rows[0].value, keys = Object.keys(response), returnValue = [];
+                    for (var _i = 0, _a = keys.sort(); _i < _a.length; _i++) {
+                        var key = _a[_i];
+                        var item = { crop: key, activities: response[key] };
+                        returnValue.push(item);
+                    }
+                    resolve(returnValue);
+                })
+                    .catch(reject);
+            });
+        };
+        ActivitiesService.prototype.byRecipe = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.find({ selector: {
+                        type: { '$eq': recipe_1.RecipeDocument.RecipeDocumentType }
+                    } })
+                    .then(function (recipesResult) {
+                    var recipes = recipesResult.docs.reduce(function (memo, doc) {
+                        memo[doc._id] = doc;
+                        return memo;
+                    }, {});
+                    _this.database.db.query('filters/activities-by-recipe')
+                        .then(function (result) {
+                        var rows = result.rows;
+                        if (!rows || !rows.length)
+                            return resolve([]);
+                        var response = rows[0].value, keys = Object.keys(response), returnValue = [];
+                        for (var _i = 0, _a = keys.sort(); _i < _a.length; _i++) {
+                            var key = _a[_i];
+                            var recipe = recipes[key];
+                            if (recipe) {
+                                var item = { recipe: recipe, activities: response[key] };
+                                returnValue.push(item);
+                            }
+                        }
+                        resolve(returnValue);
+                    })
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        return ActivitiesService;
+    }());
+    ActivitiesService.ActivitiesChangedEvent = 'Activities changed';
+    ActivitiesService = ActivitiesService_1 = __decorate([
+        aurelia_framework_1.autoinject,
+        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
+    ], ActivitiesService);
+    exports.ActivitiesService = ActivitiesService;
+    var ActivitiesService_1;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/services/data/orders-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../../models/order", "../database"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, order_1, database_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var OrdersService = OrdersService_1 = (function () {
+        function OrdersService(database, events) {
+            this.database = database;
+            this.events = events;
+        }
+        OrdersService.prototype.create = function (order) {
+            var _this = this;
+            var orderDoc = new order_1.OrderDocument(order).toJSON();
+            if (!orderDoc.customer) {
+                return Promise.reject(Error('Please choose a customer.'));
+            }
+            else if (!orderDoc.quantity) {
+                return Promise.reject(Error('Please enter the quantity for the order.'));
+            }
+            else if (!orderDoc.plant) {
+                return Promise.reject(Error('Please choose a plant for the order.'));
+            }
+            return new Promise(function (resolve, reject) {
+                return _this.database.db.post(orderDoc)
+                    .then(function (result) {
+                    if (result.ok) {
+                        orderDoc._id = result.id;
+                        orderDoc._rev = result.rev;
+                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
+                        return resolve(orderDoc);
+                    }
+                    else {
+                        reject(new Error('Order was not saved.'));
+                    }
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.createBulk = function (orders) {
+            var _this = this;
+            var orderDocs = orders.map(function (o) { return new order_1.OrderDocument(o).toJSON(); });
+            if (_.any(orderDocs, function (o) { return !o.customer; })) {
+                return Promise.reject(Error('Please choose a customer.'));
+            }
+            else if (_.any(orderDocs, function (o) { return !o.quantity; })) {
+                return Promise.reject(Error('Please enter the quantity for the order.'));
+            }
+            else if (_.any(orderDocs, function (o) { return !o.plant; })) {
+                return Promise.reject(Error('Please choose a plant for the order.'));
+            }
+            return new Promise(function (resolve, reject) {
+                return _this.database.db.bulkDocs(orderDocs)
+                    .then(function (result) {
+                    var errors = [];
+                    result.forEach(function (result) {
+                        if (result.ok) {
+                            var order = orderDocs.find(function (o) { return o._id == result.id; });
+                            if (order) {
+                                order._id = result.id;
+                                order._rev = result.rev;
+                                _this.events.publish(OrdersService_1.OrdersChangedEvent);
+                            }
+                        }
+                        else if (result.error) {
+                            errors.push(result.message);
+                        }
+                    });
+                    if (errors.length) {
+                        return reject(errors);
+                    }
+                    else {
+                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
+                        return resolve(orderDocs);
+                    }
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.getAll = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.query('filters/orders', { include_docs: true })
+                    .then(function (result) {
+                    var docs = result.rows.map(function (row) { return new order_1.OrderDocument(row.doc); });
+                    return resolve(docs);
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.getOne = function (id) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(id)
+                    .then(function (result) {
+                    var doc = new order_1.OrderDocument(result);
+                    resolve(doc);
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.edit = function (doc) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.put(doc)
+                    .then(function (value) {
+                    if (!value.ok) {
+                        return reject(Error('Editing the Order failed.'));
+                    }
+                    doc._rev = value.rev;
+                    _this.events.publish(OrdersService_1.OrdersChangedEvent, doc);
+                    return resolve(doc);
+                })
+                    .catch(reject);
+            });
+        };
+        OrdersService.prototype.cancel = function (id) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(id)
+                    .then(function (doc) {
+                    _this.database.db.remove(doc)
+                        .then(function (delDoc) {
+                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
+                        resolve(delDoc);
+                    })
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        return OrdersService;
+    }());
+    OrdersService.OrdersChangedEvent = 'Order Changed';
+    OrdersService = OrdersService_1 = __decorate([
+        aurelia_framework_1.autoinject(),
+        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
+    ], OrdersService);
+    exports.OrdersService = OrdersService;
+    var OrdersService_1;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/services/data/recipes-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../../models/recipe", "../database"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, recipe_1, database_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var RecipesService = RecipesService_1 = (function () {
+        function RecipesService(database, events) {
+            this.database = database;
+            this.events = events;
+        }
+        RecipesService.prototype.getOne = function (id) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(id)
+                    .then(function (result) {
+                    var doc = new recipe_1.RecipeDocument(result);
+                    resolve(doc);
+                })
+                    .catch(reject);
+            });
+        };
+        RecipesService.prototype.getAll = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.find({ selector: { type: recipe_1.RecipeDocument.RecipeDocumentType } })
+                    .then(function (result) {
+                    var docs = result.docs.map(function (doc) { return new recipe_1.RecipeDocument(doc); });
+                    resolve(docs);
+                })
+                    .catch(reject);
+            });
+        };
+        RecipesService.prototype.save = function (recipe) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var doc = new recipe_1.RecipeDocument(recipe), json = doc.toJSON(), result = {
+                    ok: true,
+                    errors: []
+                };
+                if (!doc.name) {
+                    result.ok = false;
+                    result.errors.push('The Recipe Name is required.');
+                }
+                if (!doc.plant && !doc.zone) {
+                    result.ok = false;
+                    result.errors.push('Please choose a plant or a zone.');
+                }
+                if (Array.isArray(doc.tasks) && doc.tasks.some(function (t) { return !t.name; })) {
+                    result.ok = false;
+                    result.errors.push('Please enter a name for the task.');
+                }
+                if (Array.isArray(doc.tasks) && doc.tasks.some(function (t) { return !t.workType; })) {
+                    result.ok = false;
+                    result.errors.push('Please choose the Type for the task.');
+                }
+                if (!result.ok) {
+                    return resolve(result);
+                }
+                if (doc.isNew) {
+                    return _this.database.db.post(json)
+                        .then(function (response) {
+                        if (response.ok) {
+                            doc._id = response.id;
+                            doc._rev = response.rev;
+                            result.recipe = doc;
+                            _this.events.publish(RecipesService_1.RecipesChangedEvent);
+                            resolve(result);
+                        }
+                        return reject(Error('Recipe was not saved.'));
+                    })
+                        .catch(reject);
+                }
+                else {
+                    return _this.database.db.put(json)
+                        .then(function (response) {
+                        if (response.ok) {
+                            doc._rev = response.rev;
+                            result.recipe = doc;
+                            _this.events.publish(RecipesService_1.RecipesChangedEvent);
+                            resolve(result);
+                        }
+                        return reject(Error('Recipe was not saved.'));
+                    })
+                        .catch(reject);
+                }
+            });
+        };
+        RecipesService.prototype.delete = function (recipe) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var result = {
+                    ok: true,
+                    errors: [],
+                    recipe: recipe
+                };
+                _this.database.db.remove(recipe._id, recipe._rev)
+                    .then(function (response) {
+                    if (response.ok) {
+                        _this.events.publish(RecipesService_1.RecipesChangedEvent);
+                        return resolve(result);
+                    }
+                    return reject(response);
+                })
+                    .catch(reject);
+            });
+        };
+        return RecipesService;
+    }());
+    RecipesService.RecipesChangedEvent = 'Recipes changed';
+    RecipesService = RecipesService_1 = __decorate([
+        aurelia_framework_1.autoinject,
+        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
+    ], RecipesService);
+    exports.RecipesService = RecipesService;
+    var RecipesService_1;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/services/data/reference-service',["require", "exports", "aurelia-framework", "../database"], function (require, exports, aurelia_framework_1, database_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var PlantsKey = 'plants';
+    var CustomersKey = 'customers';
+    var SeasonsKey = 'seasons';
+    var PropagationTimesKey = 'propagation-times';
+    var FlowerTimesKey = 'flower-times';
+    var ReferenceService = (function () {
+        function ReferenceService(database) {
+            this.database = database;
+        }
+        ReferenceService.prototype.customers = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(CustomersKey)
+                    .then(function (result) {
+                    var customers = _.sortBy(result.customers, function (customer) { return customer.name.toLowerCase(); });
+                    resolve(customers);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.plants = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PlantsKey)
+                    .then(function (result) {
+                    var plants = _.sortBy(result.plants, function (plant) { return plant.crop.toLowerCase() + plant.size; });
+                    plants.forEach(function (plant, index) {
+                        if (typeof plant.id === 'undefined')
+                            plant.id = index;
+                    });
+                    resolve(plants);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.savePlant = function (plant, seasons, propagationTimes, flowerTimes) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PlantsKey)
+                    .then(function (plantsResult) {
+                    var plants = plantsResult.plants, index = _.findIndex(plants, function (p) { return p.id === plant.id; });
+                    if (index === -1) {
+                        plant.id = _.max(plants, function (p) { return p.id; }).id + 1;
+                        plantsResult.plants.push(plant);
+                    }
+                    else {
+                        plantsResult.plants[index] = plant;
+                    }
+                    _this.database.db.put(plantsResult)
+                        .then(function (saveResult) {
+                        Promise.all([
+                            _this.saveSeasons(seasons, plants),
+                            _this.savePropagationTimes(propagationTimes, plants),
+                            _this.saveFlowerTimes(flowerTimes, plants)
+                        ]).then(function () {
+                            resolve(saveResult);
+                        })
+                            .catch(reject);
+                    })
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.deletePlant = function (plant) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PlantsKey)
+                    .then(function (result) {
+                    var plants = result.plants, index = _.findIndex(plants, function (p) { return p.id === plant.id; });
+                    if (index !== -1) {
+                        result.plants.splice(index, 1);
+                    }
+                    _this.database.db.put(result)
+                        .then(resolve)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.zones = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get('zones')
+                    .then(function (result) {
+                    resolve(result.zones);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.seasons = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(SeasonsKey)
+                    .then(function (result) {
+                    resolve(result.seasons);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.saveSeasons = function (seasons, plants) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(SeasonsKey)
+                    .then(function (seasonsResult) {
+                    var existingSeasons = seasonsResult.seasons;
+                    seasons.forEach(function (season) {
+                        var index = existingSeasons.findIndex(function (s) { return s.year === season.year && s.name === season.name; }), dbSeason = index === -1 ? {
+                            name: season.name,
+                            year: season.year,
+                            week: plants.reduce(function (memo, plant) {
+                                memo[plant.crop] = 0;
+                                return memo;
+                            }, {})
+                        } : _.clone(existingSeasons[index]);
+                        if (typeof dbSeason.week === 'number') {
+                            dbSeason.week = plants.reduce(function (memo, plant) {
+                                memo[plant.crop] = dbSeason.week;
+                                return memo;
+                            }, {});
+                        }
+                        _.extend(dbSeason.week, season.week);
+                        if (index === -1) {
+                            existingSeasons.push(dbSeason);
+                        }
+                        else {
+                            existingSeasons[index] = dbSeason;
+                        }
+                    });
+                    _this.database.db.put(seasonsResult)
+                        .then(resolve)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.weeks = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get('zones')
+                    .then(function (result) {
+                    var zones = _.reduce(result.zones, function (memo, zone) {
+                        memo[zone.name] = {
+                            zone: zone,
+                            tables: zone.tables,
+                            available: zone.tables
+                        };
+                        return memo;
+                    }, {}), start = moment().subtract(1, 'year'), returnValue = _.chain(_.range(0, 200))
+                        .map(function (idx) {
+                        var date = start.clone().add(idx, 'weeks');
+                        return {
+                            _id: date.toWeekNumberId(),
+                            year: date.isoWeekYear(),
+                            week: date.isoWeek(),
+                            zones: zones
+                        };
+                    })
+                        .value();
+                    resolve(returnValue);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.propagationTimes = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PropagationTimesKey)
+                    .then(function (result) {
+                    resolve(result.propagationTimes);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.savePropagationTimes = function (propagationTimes, plants) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(PropagationTimesKey)
+                    .then(function (propTimesResult) {
+                    var existingPropTimes = propTimesResult.propagationTimes;
+                    propagationTimes.forEach(function (propTime) {
+                        var index = existingPropTimes.findIndex(function (pt) { return pt.plant === propTime.plant && pt.year === propTime.year; });
+                        if (index === -1) {
+                            existingPropTimes.push(_.clone(propTime));
+                        }
+                        else {
+                            _.extend(existingPropTimes[index], propTime);
+                        }
+                    });
+                    _this.database.db.put(propTimesResult)
+                        .then(resolve)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.flowerTimes = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(FlowerTimesKey)
+                    .then(function (result) {
+                    resolve(result.flowerTimes);
+                })
+                    .catch(reject);
+            });
+        };
+        ReferenceService.prototype.saveFlowerTimes = function (flowerTimes, plants) {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                _this.database.db.get(FlowerTimesKey)
+                    .then(function (flowerTimesResult) {
+                    var existingFlowerTimes = flowerTimesResult.flowerTimes;
+                    flowerTimes.forEach(function (flowerTime) {
+                        var index = existingFlowerTimes.findIndex(function (pt) { return pt.plant === flowerTime.plant && pt.year === flowerTime.year; });
+                        if (index === -1) {
+                            existingFlowerTimes.push(_.clone(flowerTime));
+                        }
+                        else {
+                            _.extend(existingFlowerTimes[index], flowerTime);
+                        }
+                    });
+                    _this.database.db.put(flowerTimesResult)
+                        .then(resolve)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        return ReferenceService;
+    }());
+    ReferenceService = __decorate([
+        aurelia_framework_1.autoinject(),
+        __metadata("design:paramtypes", [database_1.Database])
+    ], ReferenceService);
+    exports.ReferenceService = ReferenceService;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/services/data/users-service',["require", "exports", "aurelia-framework", "aurelia-fetch-client", "../configuration", "../authentication"], function (require, exports, aurelia_framework_1, aurelia_fetch_client_1, configuration_1, authentication_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var UsersService = (function () {
+        function UsersService(auth, config, httpClient) {
+            this.auth = auth;
+            this.config = config;
+            this.httpClient = httpClient;
+        }
+        UsersService.prototype.getAll = function () {
+            var _this = this;
+            return new Promise(function (resolve, reject) {
+                var name = _this.auth.userInfo.name, pass = _this.auth.userInfo.password, key = btoa(name + ":" + pass), headers = { Authorization: "Basic " + key }, url = _this.config.remote_server + "/_users/_design/user-filters/_view/boekestyn-users";
+                return _this.httpClient.fetch(url, { headers: headers })
+                    .then(function (result) {
+                    if (result.ok) {
+                        return result.json()
+                            .then(function (json) {
+                            var users = json.rows.map(function (r) { return r.value; });
+                            return resolve(users);
+                        })
+                            .catch(reject);
+                    }
+                    return result.json()
+                        .then(reject)
+                        .catch(reject);
+                })
+                    .catch(reject);
+            });
+        };
+        return UsersService;
+    }());
+    UsersService = __decorate([
+        aurelia_framework_1.autoinject,
+        __metadata("design:paramtypes", [authentication_1.Authentication, configuration_1.Configuration, aurelia_fetch_client_1.HttpClient])
+    ], UsersService);
+    exports.UsersService = UsersService;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 define('resources/services/domain/capacity-service',["require", "exports", "aurelia-framework", "../../models/capacity-week", "../data/reference-service", "../data/orders-service"], function (require, exports, aurelia_framework_1, capacity_week_1, reference_service_1, orders_service_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2394,802 +3188,6 @@ define('resources/services/domain/zone-detail-service',["require", "exports", "a
         __metadata("design:paramtypes", [reference_service_1.ReferenceService])
     ], ZoneDetailService);
     exports.ZoneDetailService = ZoneDetailService;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-define('resources/services/data/activities-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../database", "../../models/activity", "../../models/recipe"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, database_1, activity_1, recipe_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var ActivitiesService = ActivitiesService_1 = (function () {
-        function ActivitiesService(database, events) {
-            this.database = database;
-            this.events = events;
-        }
-        ActivitiesService.prototype.getOne = function (id) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(id)
-                    .then(function (result) {
-                    var doc = new activity_1.ActivityDocument(result);
-                    resolve(doc);
-                })
-                    .catch(reject);
-            });
-        };
-        ActivitiesService.prototype.getAll = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.find({ selector: { type: activity_1.ActivityDocument.ActivityDocumentType } })
-                    .then(function (result) {
-                    var docs = result.docs.map(function (doc) { return new activity_1.ActivityDocument(doc); });
-                    resolve(docs);
-                })
-                    .catch(reject);
-            });
-        };
-        ActivitiesService.prototype.find = function (filter) {
-            return __awaiter(this, void 0, void 0, function () {
-                var result, docs, e_1;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            _a.trys.push([0, 2, , 3]);
-                            return [4, this.database.db.find(filter)];
-                        case 1:
-                            result = _a.sent(), docs = result.docs.map(function (doc) { return new activity_1.ActivityDocument(doc); });
-                            return [2, docs];
-                        case 2:
-                            e_1 = _a.sent();
-                            throw e_1;
-                        case 3: return [2];
-                    }
-                });
-            });
-        };
-        ActivitiesService.prototype.save = function (activity) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var doc = new activity_1.ActivityDocument(activity), json = doc.toJSON(), result = {
-                    ok: true,
-                    errors: []
-                };
-                if (!doc.name) {
-                    result.ok = false;
-                    result.errors.push('The Activity Name is required.');
-                }
-                if (!doc.date || !moment(doc.date).isValid()) {
-                    result.ok = false;
-                    result.errors.push('Please choose a valid due date.');
-                }
-                if (activity_1.ActivityStatuses.equals(doc.status, activity_1.ActivityStatuses.Incomplete) && doc.journal && !doc.journal.notes) {
-                    result.ok = false;
-                    result.errors.push('Please enter the reason the activity was Incomplete.');
-                }
-                if (!result.ok) {
-                    return resolve(result);
-                }
-                if (doc.isNew) {
-                    return _this.database.db.post(json)
-                        .then(function (response) {
-                        if (response.ok) {
-                            doc._id = response.id;
-                            doc._rev = response.rev;
-                            result.activity = doc;
-                            _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
-                            resolve(result);
-                        }
-                        return reject(Error('Activity was not saved.'));
-                    })
-                        .catch(reject);
-                }
-                else {
-                    return _this.database.db.put(json)
-                        .then(function (response) {
-                        if (response.ok) {
-                            doc._rev = response.rev;
-                            result.activity = doc;
-                            _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
-                            resolve(result);
-                        }
-                        return reject(Error('Activity was not saved.'));
-                    })
-                        .catch(reject);
-                }
-            });
-        };
-        ActivitiesService.prototype.delete = function (activity) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var result = {
-                    ok: true,
-                    errors: [],
-                    activity: activity
-                };
-                _this.database.db.remove(activity._id, activity._rev)
-                    .then(function (response) {
-                    if (response.ok) {
-                        _this.events.publish(ActivitiesService_1.ActivitiesChangedEvent);
-                        return resolve(result);
-                    }
-                    return reject(response);
-                })
-                    .catch(reject);
-            });
-        };
-        ActivitiesService.prototype.byCrop = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.query('filters/activities-by-crop')
-                    .then(function (result) {
-                    var rows = result.rows;
-                    if (!rows || !rows.length)
-                        return resolve([]);
-                    var response = rows[0].value, keys = Object.keys(response), returnValue = [];
-                    for (var _i = 0, _a = keys.sort(); _i < _a.length; _i++) {
-                        var key = _a[_i];
-                        var item = { crop: key, activities: response[key] };
-                        returnValue.push(item);
-                    }
-                    resolve(returnValue);
-                })
-                    .catch(reject);
-            });
-        };
-        ActivitiesService.prototype.byRecipe = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.find({ selector: {
-                        type: { '$eq': recipe_1.RecipeDocument.RecipeDocumentType }
-                    } })
-                    .then(function (recipesResult) {
-                    var recipes = recipesResult.docs.reduce(function (memo, doc) {
-                        memo[doc._id] = doc;
-                        return memo;
-                    }, {});
-                    _this.database.db.query('filters/activities-by-recipe')
-                        .then(function (result) {
-                        var rows = result.rows;
-                        if (!rows || !rows.length)
-                            return resolve([]);
-                        var response = rows[0].value, keys = Object.keys(response), returnValue = [];
-                        for (var _i = 0, _a = keys.sort(); _i < _a.length; _i++) {
-                            var key = _a[_i];
-                            var recipe = recipes[key];
-                            if (recipe) {
-                                var item = { recipe: recipe, activities: response[key] };
-                                returnValue.push(item);
-                            }
-                        }
-                        resolve(returnValue);
-                    })
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        return ActivitiesService;
-    }());
-    ActivitiesService.ActivitiesChangedEvent = 'Activities changed';
-    ActivitiesService = ActivitiesService_1 = __decorate([
-        aurelia_framework_1.autoinject,
-        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
-    ], ActivitiesService);
-    exports.ActivitiesService = ActivitiesService;
-    var ActivitiesService_1;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/services/data/orders-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../../models/order", "../database"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, order_1, database_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var OrdersService = OrdersService_1 = (function () {
-        function OrdersService(database, events) {
-            this.database = database;
-            this.events = events;
-        }
-        OrdersService.prototype.create = function (order) {
-            var _this = this;
-            var orderDoc = new order_1.OrderDocument(order).toJSON();
-            if (!orderDoc.customer) {
-                return Promise.reject(Error('Please choose a customer.'));
-            }
-            else if (!orderDoc.quantity) {
-                return Promise.reject(Error('Please enter the quantity for the order.'));
-            }
-            else if (!orderDoc.plant) {
-                return Promise.reject(Error('Please choose a plant for the order.'));
-            }
-            return new Promise(function (resolve, reject) {
-                return _this.database.db.post(orderDoc)
-                    .then(function (result) {
-                    if (result.ok) {
-                        orderDoc._id = result.id;
-                        orderDoc._rev = result.rev;
-                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
-                        resolve(orderDoc);
-                    }
-                    else {
-                        reject(new Error('Order was not saved.'));
-                    }
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.createBulk = function (orders) {
-            var _this = this;
-            var orderDocs = orders.map(function (o) { return new order_1.OrderDocument(o).toJSON(); });
-            if (_.any(orderDocs, function (o) { return !o.customer; })) {
-                return Promise.reject(Error('Please choose a customer.'));
-            }
-            else if (_.any(orderDocs, function (o) { return !o.quantity; })) {
-                return Promise.reject(Error('Please enter the quantity for the order.'));
-            }
-            else if (_.any(orderDocs, function (o) { return !o.plant; })) {
-                return Promise.reject(Error('Please choose a plant for the order.'));
-            }
-            return new Promise(function (resolve, reject) {
-                return _this.database.db.bulkDocs(orderDocs)
-                    .then(function (result) {
-                    var errors = [];
-                    result.forEach(function (result) {
-                        if (result.ok) {
-                            var order = orderDocs.find(function (o) { return o._id == result.id; });
-                            if (order) {
-                                order._id = result.id;
-                                order._rev = result.rev;
-                                _this.events.publish(OrdersService_1.OrdersChangedEvent);
-                            }
-                        }
-                        else if (result.error) {
-                            errors.push(result.message);
-                        }
-                    });
-                    if (errors.length) {
-                        return reject(errors);
-                    }
-                    else {
-                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
-                        return resolve(orderDocs);
-                    }
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.getAll = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.find({ selector: {
-                        type: { '$eq': order_1.OrderDocument.OrderDocumentType }
-                    } })
-                    .then(function (result) {
-                    var docs = result.docs.map(function (doc) { return new order_1.OrderDocument(doc); });
-                    resolve(docs);
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.getOne = function (id) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(id)
-                    .then(function (result) {
-                    var doc = new order_1.OrderDocument(result);
-                    resolve(doc);
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.edit = function (doc) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.put(doc)
-                    .then(function (value) {
-                    if (!value.ok) {
-                        return reject(Error('Editing the Order failed.'));
-                    }
-                    doc._rev = value.rev;
-                    _this.events.publish(OrdersService_1.OrdersChangedEvent, doc);
-                    return resolve(doc);
-                })
-                    .catch(reject);
-            });
-        };
-        OrdersService.prototype.cancel = function (id) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(id)
-                    .then(function (doc) {
-                    _this.database.db.remove(doc)
-                        .then(function (delDoc) {
-                        _this.events.publish(OrdersService_1.OrdersChangedEvent);
-                        resolve(delDoc);
-                    })
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        return OrdersService;
-    }());
-    OrdersService.OrdersChangedEvent = 'Order Changed';
-    OrdersService = OrdersService_1 = __decorate([
-        aurelia_framework_1.autoinject(),
-        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
-    ], OrdersService);
-    exports.OrdersService = OrdersService;
-    var OrdersService_1;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/services/data/recipes-service',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "../../models/recipe", "../database"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, recipe_1, database_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var RecipesService = RecipesService_1 = (function () {
-        function RecipesService(database, events) {
-            this.database = database;
-            this.events = events;
-        }
-        RecipesService.prototype.getOne = function (id) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(id)
-                    .then(function (result) {
-                    var doc = new recipe_1.RecipeDocument(result);
-                    resolve(doc);
-                })
-                    .catch(reject);
-            });
-        };
-        RecipesService.prototype.getAll = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.find({ selector: { type: recipe_1.RecipeDocument.RecipeDocumentType } })
-                    .then(function (result) {
-                    var docs = result.docs.map(function (doc) { return new recipe_1.RecipeDocument(doc); });
-                    resolve(docs);
-                })
-                    .catch(reject);
-            });
-        };
-        RecipesService.prototype.save = function (recipe) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var doc = new recipe_1.RecipeDocument(recipe), json = doc.toJSON(), result = {
-                    ok: true,
-                    errors: []
-                };
-                if (!doc.name) {
-                    result.ok = false;
-                    result.errors.push('The Recipe Name is required.');
-                }
-                if (!doc.plant && !doc.zone) {
-                    result.ok = false;
-                    result.errors.push('Please choose a plant or a zone.');
-                }
-                if (Array.isArray(doc.tasks) && doc.tasks.some(function (t) { return !t.name; })) {
-                    result.ok = false;
-                    result.errors.push('Please enter a name for the task.');
-                }
-                if (Array.isArray(doc.tasks) && doc.tasks.some(function (t) { return !t.workType; })) {
-                    result.ok = false;
-                    result.errors.push('Please choose the Type for the task.');
-                }
-                if (!result.ok) {
-                    return resolve(result);
-                }
-                if (doc.isNew) {
-                    return _this.database.db.post(json)
-                        .then(function (response) {
-                        if (response.ok) {
-                            doc._id = response.id;
-                            doc._rev = response.rev;
-                            result.recipe = doc;
-                            _this.events.publish(RecipesService_1.RecipesChangedEvent);
-                            resolve(result);
-                        }
-                        return reject(Error('Recipe was not saved.'));
-                    })
-                        .catch(reject);
-                }
-                else {
-                    return _this.database.db.put(json)
-                        .then(function (response) {
-                        if (response.ok) {
-                            doc._rev = response.rev;
-                            result.recipe = doc;
-                            _this.events.publish(RecipesService_1.RecipesChangedEvent);
-                            resolve(result);
-                        }
-                        return reject(Error('Recipe was not saved.'));
-                    })
-                        .catch(reject);
-                }
-            });
-        };
-        RecipesService.prototype.delete = function (recipe) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var result = {
-                    ok: true,
-                    errors: [],
-                    recipe: recipe
-                };
-                _this.database.db.remove(recipe._id, recipe._rev)
-                    .then(function (response) {
-                    if (response.ok) {
-                        _this.events.publish(RecipesService_1.RecipesChangedEvent);
-                        return resolve(result);
-                    }
-                    return reject(response);
-                })
-                    .catch(reject);
-            });
-        };
-        return RecipesService;
-    }());
-    RecipesService.RecipesChangedEvent = 'Recipes changed';
-    RecipesService = RecipesService_1 = __decorate([
-        aurelia_framework_1.autoinject,
-        __metadata("design:paramtypes", [database_1.Database, aurelia_event_aggregator_1.EventAggregator])
-    ], RecipesService);
-    exports.RecipesService = RecipesService;
-    var RecipesService_1;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/services/data/reference-service',["require", "exports", "aurelia-framework", "../database"], function (require, exports, aurelia_framework_1, database_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var PlantsKey = 'plants';
-    var CustomersKey = 'customers';
-    var SeasonsKey = 'seasons';
-    var PropagationTimesKey = 'propagation-times';
-    var FlowerTimesKey = 'flower-times';
-    var ReferenceService = (function () {
-        function ReferenceService(database) {
-            this.database = database;
-        }
-        ReferenceService.prototype.customers = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(CustomersKey)
-                    .then(function (result) {
-                    var customers = _.sortBy(result.customers, function (customer) { return customer.name.toLowerCase(); });
-                    resolve(customers);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.plants = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PlantsKey)
-                    .then(function (result) {
-                    var plants = _.sortBy(result.plants, function (plant) { return plant.crop.toLowerCase() + plant.size; });
-                    plants.forEach(function (plant, index) {
-                        if (typeof plant.id === 'undefined')
-                            plant.id = index;
-                    });
-                    resolve(plants);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.savePlant = function (plant, seasons, propagationTimes, flowerTimes) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PlantsKey)
-                    .then(function (plantsResult) {
-                    var plants = plantsResult.plants, index = _.findIndex(plants, function (p) { return p.id === plant.id; });
-                    if (index === -1) {
-                        plant.id = _.max(plants, function (p) { return p.id; }).id + 1;
-                        plantsResult.plants.push(plant);
-                    }
-                    else {
-                        plantsResult.plants[index] = plant;
-                    }
-                    _this.database.db.put(plantsResult)
-                        .then(function (saveResult) {
-                        Promise.all([
-                            _this.saveSeasons(seasons, plants),
-                            _this.savePropagationTimes(propagationTimes, plants),
-                            _this.saveFlowerTimes(flowerTimes, plants)
-                        ]).then(function () {
-                            resolve(saveResult);
-                        })
-                            .catch(reject);
-                    })
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.deletePlant = function (plant) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PlantsKey)
-                    .then(function (result) {
-                    var plants = result.plants, index = _.findIndex(plants, function (p) { return p.id === plant.id; });
-                    if (index !== -1) {
-                        result.plants.splice(index, 1);
-                    }
-                    _this.database.db.put(result)
-                        .then(resolve)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.zones = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get('zones')
-                    .then(function (result) {
-                    resolve(result.zones);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.seasons = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(SeasonsKey)
-                    .then(function (result) {
-                    resolve(result.seasons);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.saveSeasons = function (seasons, plants) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(SeasonsKey)
-                    .then(function (seasonsResult) {
-                    var existingSeasons = seasonsResult.seasons;
-                    seasons.forEach(function (season) {
-                        var index = existingSeasons.findIndex(function (s) { return s.year === season.year && s.name === season.name; }), dbSeason = index === -1 ? {
-                            name: season.name,
-                            year: season.year,
-                            week: plants.reduce(function (memo, plant) {
-                                memo[plant.crop] = 0;
-                                return memo;
-                            }, {})
-                        } : _.clone(existingSeasons[index]);
-                        if (typeof dbSeason.week === 'number') {
-                            dbSeason.week = plants.reduce(function (memo, plant) {
-                                memo[plant.crop] = dbSeason.week;
-                                return memo;
-                            }, {});
-                        }
-                        _.extend(dbSeason.week, season.week);
-                        if (index === -1) {
-                            existingSeasons.push(dbSeason);
-                        }
-                        else {
-                            existingSeasons[index] = dbSeason;
-                        }
-                    });
-                    _this.database.db.put(seasonsResult)
-                        .then(resolve)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.weeks = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get('zones')
-                    .then(function (result) {
-                    var zones = _.reduce(result.zones, function (memo, zone) {
-                        memo[zone.name] = {
-                            zone: zone,
-                            tables: zone.tables,
-                            available: zone.tables
-                        };
-                        return memo;
-                    }, {}), start = moment().subtract(1, 'year'), returnValue = _.chain(_.range(0, 200))
-                        .map(function (idx) {
-                        var date = start.clone().add(idx, 'weeks');
-                        return {
-                            _id: date.toWeekNumberId(),
-                            year: date.isoWeekYear(),
-                            week: date.isoWeek(),
-                            zones: zones
-                        };
-                    })
-                        .value();
-                    resolve(returnValue);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.propagationTimes = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PropagationTimesKey)
-                    .then(function (result) {
-                    resolve(result.propagationTimes);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.savePropagationTimes = function (propagationTimes, plants) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(PropagationTimesKey)
-                    .then(function (propTimesResult) {
-                    var existingPropTimes = propTimesResult.propagationTimes;
-                    propagationTimes.forEach(function (propTime) {
-                        var index = existingPropTimes.findIndex(function (pt) { return pt.plant === propTime.plant && pt.year === propTime.year; });
-                        if (index === -1) {
-                            existingPropTimes.push(_.clone(propTime));
-                        }
-                        else {
-                            _.extend(existingPropTimes[index], propTime);
-                        }
-                    });
-                    _this.database.db.put(propTimesResult)
-                        .then(resolve)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.flowerTimes = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(FlowerTimesKey)
-                    .then(function (result) {
-                    resolve(result.flowerTimes);
-                })
-                    .catch(reject);
-            });
-        };
-        ReferenceService.prototype.saveFlowerTimes = function (flowerTimes, plants) {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                _this.database.db.get(FlowerTimesKey)
-                    .then(function (flowerTimesResult) {
-                    var existingFlowerTimes = flowerTimesResult.flowerTimes;
-                    flowerTimes.forEach(function (flowerTime) {
-                        var index = existingFlowerTimes.findIndex(function (pt) { return pt.plant === flowerTime.plant && pt.year === flowerTime.year; });
-                        if (index === -1) {
-                            existingFlowerTimes.push(_.clone(flowerTime));
-                        }
-                        else {
-                            _.extend(existingFlowerTimes[index], flowerTime);
-                        }
-                    });
-                    _this.database.db.put(flowerTimesResult)
-                        .then(resolve)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        return ReferenceService;
-    }());
-    ReferenceService = __decorate([
-        aurelia_framework_1.autoinject(),
-        __metadata("design:paramtypes", [database_1.Database])
-    ], ReferenceService);
-    exports.ReferenceService = ReferenceService;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/services/data/users-service',["require", "exports", "aurelia-framework", "aurelia-fetch-client", "../configuration", "../authentication"], function (require, exports, aurelia_framework_1, aurelia_fetch_client_1, configuration_1, authentication_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var UsersService = (function () {
-        function UsersService(auth, config, httpClient) {
-            this.auth = auth;
-            this.config = config;
-            this.httpClient = httpClient;
-        }
-        UsersService.prototype.getAll = function () {
-            var _this = this;
-            return new Promise(function (resolve, reject) {
-                var name = _this.auth.userInfo.name, pass = _this.auth.userInfo.password, key = btoa(name + ":" + pass), headers = { Authorization: "Basic " + key }, url = _this.config.remote_server + "/_users/_design/user-filters/_view/boekestyn-users";
-                return _this.httpClient.fetch(url, { headers: headers })
-                    .then(function (result) {
-                    if (result.ok) {
-                        return result.json()
-                            .then(function (json) {
-                            var users = json.rows.map(function (r) { return r.value; });
-                            return resolve(users);
-                        })
-                            .catch(reject);
-                    }
-                    return result.json()
-                        .then(reject)
-                        .catch(reject);
-                })
-                    .catch(reject);
-            });
-        };
-        return UsersService;
-    }());
-    UsersService = __decorate([
-        aurelia_framework_1.autoinject,
-        __metadata("design:paramtypes", [authentication_1.Authentication, configuration_1.Configuration, aurelia_fetch_client_1.HttpClient])
-    ], UsersService);
-    exports.UsersService = UsersService;
 });
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -4288,15 +4286,9 @@ define('resources/views/activities/index',["require", "exports", "aurelia-framew
         });
         ActivityIndex.prototype.load = function () {
             return __awaiter(this, void 0, void 0, function () {
-                var result;
                 return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0: return [4, this.service.getAll()];
-                        case 1:
-                            result = _a.sent();
-                            this.filter();
-                            return [2];
-                    }
+                    this.filter();
+                    return [2];
                 });
             });
         };
@@ -4379,17 +4371,23 @@ define('resources/views/activities/index',["require", "exports", "aurelia-framew
             this.filter();
         };
         ActivityIndex.prototype.loadFilterSettings = function () {
-            var settingsJSON = sessionStorage.getItem(FILTER_SETTINGS_KEY);
-            if (settingsJSON) {
-                var defaults = {
-                    week: moment().toWeekNumberId(),
-                    workType: activity_1.WorkTypes.ALL_WORK_TYPES,
-                    showAll: false,
-                    showCompleted: false,
-                    showIncomplete: false,
-                    zone: ALL_ZONES
-                }, settings = JSON.parse(settingsJSON);
-                Object.assign(this, defaults, settings);
+            try {
+                this.filtering = true;
+                var settingsJSON = sessionStorage.getItem(FILTER_SETTINGS_KEY);
+                if (settingsJSON) {
+                    var defaults = {
+                        week: moment().toWeekNumberId(),
+                        workType: activity_1.WorkTypes.ALL_WORK_TYPES,
+                        showAll: false,
+                        showCompleted: false,
+                        showIncomplete: false,
+                        zone: ALL_ZONES
+                    }, settings = JSON.parse(settingsJSON);
+                    Object.assign(this, defaults, settings);
+                }
+            }
+            finally {
+                this.filtering = false;
             }
         };
         ActivityIndex.prototype.saveFilterSettings = function () {
@@ -7217,10 +7215,10 @@ define('text!resources/views/calculator/order-table.html', ['module'], function(
 define('text!styles/styles.css', ['module'], function(module) { module.exports = "/*!\n * # Semantic UI 0.0.8 - Calendar\n * http://github.com/semantic-org/semantic-ui/\n *\n *\n * Released under the MIT license\n * http://opensource.org/licenses/MIT\n *\n */\n\n\n/*******************************\n            Popup\n*******************************/\n\n.ui.calendar .ui.popup {\n  max-width: none;\n  padding: 0;\n  border: none;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\n\n\n/*******************************\n            Calendar\n*******************************/\n\n.ui.calendar .calendar:focus {\n  outline: 0;\n}\n\n\n/*******************************\n            Grid\n*******************************/\n\n.ui.calendar .ui.popup .ui.grid {\n  display: block;\n  white-space: nowrap;\n}\n.ui.calendar .ui.popup .ui.grid > .column {\n  width: auto;\n}\n\n\n/*******************************\n            Table\n*******************************/\n\n.ui.calendar .ui.table.year,\n.ui.calendar .ui.table.month,\n.ui.calendar .ui.table.minute {\n  min-width: 15em;\n}\n.ui.calendar .ui.table.day {\n  min-width: 18em;\n}\n.ui.calendar .ui.table.hour {\n  min-width: 20em;\n}\n.ui.calendar .ui.table tr th,\n.ui.calendar .ui.table tr td {\n  padding: 0.5em;\n  white-space: nowrap;\n}\n.ui.calendar .ui.table tr th {\n  border-left: none;\n}\n.ui.calendar .ui.table tr th .icon {\n  margin: 0;\n}\n.ui.calendar .ui.table tr th .icon {\n  margin: 0;\n}\n.ui.calendar .ui.table tr:first-child th {\n  position: relative;\n  padding-left: 0;\n  padding-right: 0;\n}\n.ui.calendar .ui.table.day tr:first-child th {\n  border: none;\n}\n.ui.calendar .ui.table.day tr:nth-child(2) th {\n  padding-top: 0.2em;\n  padding-bottom: 0.3em;\n}\n.ui.calendar .ui.table tr td {\n  padding-left: 0.1em;\n  padding-right: 0.1em;\n}\n.ui.calendar .ui.table tr .link {\n  cursor: pointer;\n}\n.ui.calendar .ui.table tr .prev.link {\n  width: 14.28571429%;\n  position: absolute;\n  left: 0;\n}\n.ui.calendar .ui.table tr .next.link {\n  width: 14.28571429%;\n  position: absolute;\n  right: 0;\n}\n.ui.calendar .ui.table tr .disabled {\n  pointer-events: none;\n  color: rgba(40, 40, 40, 0.3);\n}\n\n/*--------------\n     States\n---------------*/\n\n.ui.calendar .ui.table tr td.today {\n  font-weight: bold;\n}\n.ui.calendar .ui.table tr td.range {\n  background: rgba(0, 0, 0, 0.05);\n  color: rgba(0, 0, 0, 0.95);\n  box-shadow: none;\n}\n.ui.calendar .ui.table.inverted tr td.range {\n  background: rgba(255, 255, 255, 0.08);\n  color: #ffffff;\n  box-shadow: none;\n}\n.ui.calendar .calendar:focus .ui.table tbody tr td.focus,\n.ui.calendar .calendar.active .ui.table tbody tr td.focus {\n  box-shadow: inset 0 0 0 1px #85B7D9;\n}\n.ui.calendar .calendar:focus .ui.table.inverted tbody tr td.focus,\n.ui.calendar .calendar.active .ui.table.inverted tbody tr td.focus {\n  box-shadow: inset 0 0 0 1px #85B7D9;\n}\n\n\n/*******************************\n         Theme Overrides\n*******************************/\n\n\n/* General */\na {\n  cursor: pointer;\n}\na:hover {\n  text-decoration: underline;\n}\nlabel[for]:hover {\n  cursor: pointer;\n}\n.text-right {\n  text-align: right;\n}\n.text-center {\n  text-align: center;\n}\n.ui[class*=\"right floated\"] {\n  float: right;\n}\n.ui[class*=\"left floated\"] {\n  float: left;\n}\n.ui.secondary.pointing.menu .item.logo-item {\n  padding: 0 20px;\n}\n.ui.fixed.menu.button-bar.top {\n  top: 50px;\n}\n.ui.popup.calendar:focus {\n  outline: none;\n}\n#main-menu {\n  margin-bottom: 0;\n}\n.ui.main.container {\n  padding-top: 15px;\n}\n.ui.main.container footer {\n  text-align: center;\n  color: #636c72;\n}\n.date-display {\n  color: #4183C4;\n  cursor: pointer;\n}\n.date-display:hover {\n  text-decoration: underline;\n}\n@media only screen and (max-width: 767px) {\n  #main-menu > .ui.container {\n    margin: 0px !important;\n  }\n  .menu .item.logo-item span {\n    display: none;\n  }\n  .hide-mobile {\n    display: none !important;\n  }\n}\n@media only screen and (min-width: 768px) {\n  .hide-desktop {\n    display: none !important;\n  }\n}\n.ui.striped.table > tr:nth-child(2n),\n.ui.striped.table tbody tr:nth-child(2n) {\n  background-color: rbga(0, 0, 50, 0.05);\n}\n"; });
 define('text!resources/views/calculator/zone-cell.html', ['module'], function(module) { module.exports = "<template>\r\n    <button type=\"button\" click.trigger=\"select()\" hide.bind=\"zone.available==null\"\r\n        class=\"ui toggle icon button fluid ${zone.available < 0 ? 'red' : 'green'} ${zone.selected ? '' : 'basic'}\">\r\n        ${zone.available}\r\n    </button>\r\n    <span show.bind=\"zone.available == null\">&nbsp;</span>\r\n</template>"; });
 define('text!styles/tasks.css', ['module'], function(module) { module.exports = "#task-detail-container .button-container {\n  padding: 0;\n  display: inline-block;\n}\n#task-detail-container .button-container.fixed {\n  transition: all 0.5s ease;\n  position: fixed;\n  padding: 1em;\n  background-color: #fff;\n}\n@media only screen and (max-width: 1199px) and (min-width: 992px) {\n  #task-detail-container .button-container.fixed {\n    width: 933px;\n  }\n}\n#task-detail-container .ui.form .fields .fields.inline {\n  margin-bottom: 0;\n}\n#task-detail-container.not-recurring .recurrence {\n  display: none;\n}\n#task-detail-container.plant-task .zone-field {\n  display: none;\n}\n#task-detail-container.zone-task .plant-field {\n  display: none;\n}\n#task-detail-container input[type=number] {\n  width: 75px;\n}\n#task-detail-container .Day .weekly,\n#task-detail-container .On .weekly,\n#task-detail-container .Week .daily,\n#task-detail-container .On .daily {\n  display: none;\n}\n#task-detail-container .On .not-on {\n  display: none;\n}\n#task-detail-container .any-day .weekday {\n  display: none;\n}\n#task-detail-container .NoEnd .end-date,\n#task-detail-container .EndAfter .end-date,\n#task-detail-container .NoEnd .end-after-occurrences,\n#task-detail-container .EndDate .end-after-occurrences {\n  display: none;\n}\n"; });
-define('text!resources/views/controls/change-password.html', ['module'], function(module) { module.exports = "<template>\r\n    <ux-dialog id=\"change-password-dialog\">\r\n        <ux-dialog-header>\r\n            <h3>\r\n                <i class=\"fa fa-key\"></i>\r\n                Change Password\r\n            </h3>\r\n        </ux-dialog-header>\r\n        <ux-dialog-body>\r\n            <form class=\"ui form ${errors.length ? 'error' : ''}\">\r\n                <div class=\"field\">\r\n                    <label for=\"new\">Password:</label>\r\n                    <input id=\"new\" type=\"password\" value.bind=\"newPassword\">\r\n                </div>\r\n                <div class=\"field\">\r\n                    <label for=\"confirm\">Confirm:</label>\r\n                    <input id=\"confirm\" type=\"password\" value.bind=\"confirmPassword\">\r\n                </div>\r\n                <div class=\"ui divider\">&nbsp;</div>\r\n                <div class=\"ui error message\" show.bind=\"errors.length\">\r\n                    <div class=\"ui list\" repeat.for=\"e of errors\">\r\n                        <div class=\"item\">${e}</div>\r\n                    </div>\r\n                </div>\r\n            </form>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button class=\"ui basic button\" click.delegate=\"controller.cancel()\">Cancel</button>\r\n            <button class=\"ui basic primary button\" click.delegate=\"save()\">\r\n                <i class=\"save button icon\"></i>\r\n                Save\r\n            </button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>"; });
 define('text!styles/week-detail.css', ['module'], function(module) { module.exports = "#week-detail-sidebar {\n  margin-top: 70px !important;\n}\n#week-detail-sidebar > week-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: auto;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#week-detail-sidebar > week-detail button.close {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n  z-index: 100;\n}\n#week-detail-sidebar > week-detail div.calendar {\n  display: inline-block;\n  cursor: pointer;\n}\n#week-detail-sidebar > week-detail div.calendar.start,\n#week-detail-sidebar > week-detail div.calendar.end {\n  padding: 0.78571429em 0;\n}\n#week-detail-sidebar > week-detail .report-link {\n  padding: 0.78571429em 3px;\n  display: inline-block;\n}\n#week-detail-sidebar > week-detail .report-link:hover {\n  text-decoration: underline;\n}\n#week-detail-sidebar > week-detail .ui.form .inline.fields .field > .selection.dropdown,\n#week-detail-sidebar > week-detail .ui.form .inline.field > .selection.dropdown {\n  min-width: 100px;\n}\n#week-detail-sidebar > week-detail td.batch i {\n  float: right;\n}\n.ui[class*=\"super wide\"].left.sidebar,\n.ui[class*=\"super wide\"].right.sidebar {\n  width: 750px;\n}\n.ui.visible[class*=\"super wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-750px, 0, 0);\n  transform: translate3d(-750px, 0, 0);\n}\n"; });
-define('text!resources/views/controls/error-notification.html', ['module'], function(module) { module.exports = "<template>\r\n    <ux-dialog>\r\n        <ux-dialog-body>\r\n            <div class=\"ui segment negative message\">\r\n                <p>\r\n                    <i class=\"icon warning circle\"></i>\r\n                    ${message}\r\n                </p>\r\n            </div>\r\n        </ux-dialog-body>\r\n\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" click.trigger=\"controller.cancel()\" class=\"ui button primary\">OK</button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>\r\n"; });
+define('text!resources/views/controls/change-password.html', ['module'], function(module) { module.exports = "<template>\r\n    <ux-dialog id=\"change-password-dialog\">\r\n        <ux-dialog-header>\r\n            <h3>\r\n                <i class=\"fa fa-key\"></i>\r\n                Change Password\r\n            </h3>\r\n        </ux-dialog-header>\r\n        <ux-dialog-body>\r\n            <form class=\"ui form ${errors.length ? 'error' : ''}\">\r\n                <div class=\"field\">\r\n                    <label for=\"new\">Password:</label>\r\n                    <input id=\"new\" type=\"password\" value.bind=\"newPassword\">\r\n                </div>\r\n                <div class=\"field\">\r\n                    <label for=\"confirm\">Confirm:</label>\r\n                    <input id=\"confirm\" type=\"password\" value.bind=\"confirmPassword\">\r\n                </div>\r\n                <div class=\"ui divider\">&nbsp;</div>\r\n                <div class=\"ui error message\" show.bind=\"errors.length\">\r\n                    <div class=\"ui list\" repeat.for=\"e of errors\">\r\n                        <div class=\"item\">${e}</div>\r\n                    </div>\r\n                </div>\r\n            </form>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button class=\"ui basic button\" click.delegate=\"controller.cancel()\">Cancel</button>\r\n            <button class=\"ui basic primary button\" click.delegate=\"save()\">\r\n                <i class=\"save button icon\"></i>\r\n                Save\r\n            </button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>"; });
 define('text!styles/zone-detail.css', ['module'], function(module) { module.exports = "#zone-detail-sidebar {\n  margin-top: 70px !important;\n}\n#zone-detail-sidebar > zone-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: hidden;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#zone-detail-sidebar > zone-detail button {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n}\n#zone-detail-sidebar > zone-detail > table {\n  margin-bottom: 0;\n}\n#zone-detail-sidebar > zone-detail .table-wrapper {\n  height: calc(100vh - 275px);\n  overflow-y: auto;\n}\n#zone-detail-sidebar .ui.table th,\n#zone-detail-sidebar .ui.table td {\n  width: 75px;\n}\n.ui[class*=\"super-duper wide\"].left.sidebar,\n.ui[class*=\"super-duper wide\"].right.sidebar {\n  width: 80%;\n}\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-80%, 0, 0);\n  transform: translate3d(-80%, 0, 0);\n}\n"; });
+define('text!resources/views/controls/error-notification.html', ['module'], function(module) { module.exports = "<template>\r\n    <ux-dialog>\r\n        <ux-dialog-body>\r\n            <div class=\"ui segment negative message\">\r\n                <p>\r\n                    <i class=\"icon warning circle\"></i>\r\n                    ${message}\r\n                </p>\r\n            </div>\r\n        </ux-dialog-body>\r\n\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" click.trigger=\"controller.cancel()\" class=\"ui button primary\">OK</button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>\r\n"; });
 define('text!resources/views/controls/nav-bar.html', ['module'], function(module) { module.exports = "<template>\n    <div id=\"main-menu\" class=\"ui inverted segment\" ref=\"el\">\n        <div class=\"ui container\">\n            <div class=\"ui large secondary inverted pointing menu\">\n                <a href=\"#\" class=\"item logo-item\">\n                    <img src=\"images/logo.png\" alt=\"Logo\" class=\"logo\">\n                    <span>Boekestyn Greenhouses</span>\n                </a>\n                <a repeat.for=\"item of authorizedRoutes\" href.bind=\"item.navModel.href\" class=\"item ${item.navModel.isActive? 'active' : ''}\">\n                    ${item.title}\n                </a>\n                <button type=\"button\" class=\"item\" click.delegate=\"showSearch()\" show.bind=\"canSearch\">\n                    <i class=\"icon search\"></i>\n                    Search\n                </button>\n                <button type=\"button\" class=\"item\" click.delegate=\"showCalculator()\" show.bind=\"canCreateOrders\">\n                    <i class=\"icon plus\"></i>\n                    New Order\n                </button>\n                <div class=\"ui right dropdown item\">\n                    ${userName}\n                    <i class=\"dropdown icon\"></i>\n                    <div class=\"menu\">\n                        <button type=\"button\" class=\"item\" click.delegate=\"changePassword()\">\n                            <i class=\"talk outline icon\"></i>\n                            Change Password\n                        </button>\n                        <button type=\"button\" class=\"item\" click.delegate=\"logout()\">\n                            <i class=\"sign out icon\"></i>\n                            Logout\n                        </button>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id=\"fixed-menu\" class=\"ui large top fixed menu transition hidden\">\n        <div class=\"ui container\">\n            <a href=\"#\" class=\"item logo-item\">\n                <img src=\"images/logo.png\" alt=\"Logo\" class=\"logo\">\n                <span>Boekestyn Greenhouses</span>\n            </a>\n            <a repeat.for=\"item of authorizedRoutes\" href.bind=\"item.navModel.href\" class=\"item ${item.navModel.isActive? 'active' : ''}\">\n                ${item.title}\n            </a>\n            <a class=\"item\" click.delegate=\"showSearch()\" show.bind=\"canSearch\">\n                <i class=\"icon search\"></i>\n                Search\n            </a>\n            <a class=\"item\" click.delegate=\"showCalculator()\" show.bind=\"canCreateOrders\">\n                <i class=\"icon plus\"></i>\n                New Order\n            </a>\n        </div>\n    </div>\n</template>\n"; });
 define('text!resources/views/controls/prompt.html', ['module'], function(module) { module.exports = "<template>\n    <ux-dialog>\n        <ux-dialog-body>\n            <p>${message}</p>\n        </ux-dialog-body>\n\n        <ux-dialog-footer>\n            <button type=\"button\" click.trigger=\"controller.cancel()\" class=\"ui button basic\">No</button>\n            <button type=\"button\" click.trigger=\"controller.ok()\" class=\"ui button primary\">Yes</button>\n        </ux-dialog-footer>\n    </ux-dialog>\n</template>\n"; });
 define('text!resources/views/home/index.html', ['module'], function(module) { module.exports = "<template>\n    <div class=\"segment\">\n        <div class=\"ui grid\">\n            <div class=\"four column row\">\n                <div class=\"left floated column\">\n                    <h1 class=\"ui left aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: lastYear}\">&lt; &nbsp; ${lastYear}</a>\n                    </h1>\n                </div>\n                <div class=\"column\">\n                    <h1 class=\"ui center aligned header\">${year}</h1>\n                </div>\n                <div class=\"right floated column\">\n                    <h1 class=\"ui right aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: nextYear}\">${nextYear} &nbsp; &gt;</a>\n                    </h1>\n                </div>\n            </div>\n        </div>\n\n        <table class=\"ui striped celled table\">\n            <thead>\n                <tr>\n                    <th>Week</th>\n                    <th repeat.for=\"zone of zones\" class=\"center aligned\">\n                        <button type=\"button\" class=\"ui basic button\" click.delegate=\"showZoneDetails(zone)\">${zone.name}</button>\n                    </th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr repeat.for=\"key,value of weeks\">\n                    <td>\n                        <button type=\"button\" class=\"ui basic button\" click.delegate=\"showWeekDetails(value)\">${value.week}</button>\n                    </td>\n                    <td repeat.for=\"zone of zones\">${value.zones[zone.name].available|numericFormat}</td>\n                </tr>\n            </tbody>\n        </table>\n\n        <div class=\"ui grid\">\n            <div class=\"four column row\">\n                <div class=\"left floated column\">\n                    <h1 class=\"ui left aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: lastYear}\">&lt; &nbsp; ${lastYear}</a>\n                    </h1>\n                </div>\n                <div class=\"column\">\n                    <h1 class=\"ui center aligned header\">${year}</h1>\n                </div>\n                <div class=\"right floated column\">\n                    <h1 class=\"ui right aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: nextYear}\">${nextYear} &nbsp; &gt;</a>\n                    </h1>\n                </div>\n            </div>\n        </div>\n    </div>\n</template>\n"; });
