@@ -4311,18 +4311,30 @@ define('resources/views/activities/index',["require", "exports", "aurelia-framew
                 this.filtering = true;
                 var filter = {
                     selector: {
-                        $and: [{ type: 'activity' }]
+                        $and: [{
+                                type: 'activity'
+                            }]
                     }
+                }, status_1 = {
+                    $in: [
+                        activity_1.ActivityStatuses.NotStarted,
+                        activity_1.ActivityStatuses.NotStarted.toLowerCase(),
+                        activity_1.ActivityStatuses.InProgress,
+                        activity_1.ActivityStatuses.InProgress.toLowerCase()
+                    ]
                 };
                 if (!this.showAll) {
                     filter.selector.$and.push({ assignedTo: { $eq: this.auth.userInfo.name } });
                 }
-                if (!this.showCompleted) {
-                    filter.selector.$and.push({ status: { $nin: [activity_1.ActivityStatuses.Complete, activity_1.ActivityStatuses.Complete.toLowerCase()] } });
+                if (this.showCompleted) {
+                    status_1.$in.push(activity_1.ActivityStatuses.Complete);
+                    status_1.$in.push(activity_1.ActivityStatuses.Complete.toLowerCase());
                 }
-                if (!this.showIncomplete) {
-                    filter.selector.$and.push({ status: { $nin: [activity_1.ActivityStatuses.Incomplete, activity_1.ActivityStatuses.Incomplete.toLowerCase()] } });
+                if (this.showIncomplete) {
+                    status_1.$in.push(activity_1.ActivityStatuses.Incomplete);
+                    status_1.$in.push(activity_1.ActivityStatuses.Incomplete.toLowerCase());
                 }
+                filter.selector.$and.push({ status: status_1 });
                 if (this.week && !activity_1.WorkTypes.equals(this.workType, activity_1.WorkTypes.ALL_WORK_TYPES)) {
                     var properCase = this.workType.charAt(0).toUpperCase() + this.workType.substr(1).toLowerCase(), lowerCase = this.workType.toLowerCase();
                     filter.selector.$and.push({ workType: { $in: [lowerCase, properCase] } });
@@ -4355,8 +4367,17 @@ define('resources/views/activities/index',["require", "exports", "aurelia-framew
                             ] });
                     }
                 }
+                var perf = window.performance;
+                perf.clearMarks();
+                perf.clearMeasures();
+                perf.clearResourceTimings();
+                perf.mark('start');
                 this.service.find(filter)
                     .then(function (result) {
+                    perf.mark('finish');
+                    perf.measure('find', 'start', 'finish');
+                    var entry = perf.getEntriesByType('measure')[0];
+                    console.log(entry.name + ": " + entry.duration);
                     _this.activities = result;
                     _this.filtering = false;
                 })
@@ -5619,332 +5640,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-define('resources/views/plants/index',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "aurelia-dialog", "../../services/database", "../../services/data/reference-service", "../../models/plant", "./plant-detail"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, aurelia_dialog_1, database_1, reference_service_1, plant_1, plant_detail_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var CropIndex = (function () {
-        function CropIndex(referenceService, dialogService, events) {
-            this.referenceService = referenceService;
-            this.dialogService = dialogService;
-            this.events = events;
-            this.loadPlants();
-        }
-        CropIndex.prototype.activate = function () {
-            this.plantSyncChangeSubscription = this.events.subscribe(database_1.Database.PlantsSyncChangeEvent, this.loadPlants.bind(this));
-        };
-        CropIndex.prototype.deactivate = function () {
-            this.plantSyncChangeSubscription.dispose();
-        };
-        CropIndex.prototype.loadPlants = function () {
-            var _this = this;
-            return this.referenceService.plants()
-                .then(function (result) { return _this.plants = _.sortBy(result, function (p) { return p.crop.toLowerCase() + p.size; }); });
-        };
-        CropIndex.prototype.cuttingsPerTable = function (plant) {
-            if (typeof plant.cuttingsPerTable === 'number')
-                return plant.cuttingsPerTable;
-            return _.reduce([plant_1.Spacings.Tight, plant_1.Spacings.Half, plant_1.Spacings.Full], function (memo, space) {
-                var value = plant.cuttingsPerTable[space];
-                if (typeof value !== 'undefined') {
-                    memo.push(space + ": " + value);
-                }
-                return memo;
-            }, []).join(', ');
-        };
-        CropIndex.prototype.addPlant = function () {
-            var _this = this;
-            this.dialogService.open({
-                viewModel: plant_detail_1.PlantDetail,
-                model: new plant_1.PlantDocument()
-            }).whenClosed(function (result) {
-                if (result.wasCancelled)
-                    return;
-                _this.loadPlants();
-            });
-        };
-        CropIndex.prototype.detail = function (plant) {
-            var _this = this;
-            this.dialogService.open({
-                viewModel: plant_detail_1.PlantDetail,
-                model: plant
-            }).whenClosed(function (result) {
-                if (result.wasCancelled)
-                    return;
-                _this.loadPlants();
-            });
-        };
-        CropIndex = __decorate([
-            aurelia_framework_1.autoinject,
-            __metadata("design:paramtypes", [reference_service_1.ReferenceService, aurelia_dialog_1.DialogService,
-                aurelia_event_aggregator_1.EventAggregator])
-        ], CropIndex);
-        return CropIndex;
-    }());
-    exports.CropIndex = CropIndex;
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-define('resources/views/plants/plant-detail',["require", "exports", "aurelia-framework", "aurelia-dialog", "../controls/error-notification", "../controls/prompt", "../../services/log", "../../services/data/reference-service"], function (require, exports, aurelia_framework_1, aurelia_dialog_1, error_notification_1, prompt_1, log_1, reference_service_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var SeasonsYear = (function () {
-        function SeasonsYear() {
-            this.spring = 0;
-            this.summer = 0;
-            this.fall = 0;
-            this.winter = 0;
-        }
-        return SeasonsYear;
-    }());
-    var PlantDetail = (function () {
-        function PlantDetail(referenceService, dialogService, controller) {
-            this.referenceService = referenceService;
-            this.dialogService = dialogService;
-            this.controller = controller;
-            this.seasons = {};
-            this.propagationTimes = {};
-            this.flowerTimes = {};
-            this.currentYear = new Date().getFullYear();
-            controller.settings.lock = true;
-            controller.settings.position = position;
-        }
-        PlantDetail.prototype.activate = function (plant) {
-            var _this = this;
-            this.plant = _.clone(plant);
-            if (this.plant.size && !this.plant.size.endsWith('"'))
-                this.plant.size += '"';
-            this.referenceService.seasons()
-                .then(function (seasons) {
-                seasons.forEach(function (s) {
-                    if (!_this.seasons[s.year]) {
-                        _this.seasons[s.year] = new SeasonsYear();
-                    }
-                    var week = typeof s.week === 'number' ? s.week : s.week[_this.plant.crop];
-                    _this.seasons[s.year][s.name] = week;
-                    _this.verifyCurrentSeason();
-                });
-            });
-            this.referenceService.propagationTimes()
-                .then(function (propagationTimes) {
-                propagationTimes.filter(function (pt) { return pt.plant === _this.plant.name; })
-                    .forEach(function (pt) {
-                    _this.propagationTimes[pt.year] = new SeasonsYear();
-                    if (typeof pt.times === 'number') {
-                        _this.propagationTimes[pt.year].spring =
-                            _this.propagationTimes[pt.year].summer =
-                                _this.propagationTimes[pt.year].fall =
-                                    _this.propagationTimes[pt.year].winter =
-                                        pt.times;
-                    }
-                    else {
-                        _this.propagationTimes[pt.year] = _.clone(pt.times);
-                    }
-                });
-            });
-            this.referenceService.flowerTimes()
-                .then(function (flowerTimes) {
-                flowerTimes.filter(function (ft) { return ft.plant === _this.plant.name; })
-                    .forEach(function (ft) {
-                    _this.flowerTimes[ft.year] = new SeasonsYear();
-                    if (typeof ft.times === 'number') {
-                        _this.flowerTimes[ft.year].spring =
-                            _this.flowerTimes[ft.year].summer =
-                                _this.flowerTimes[ft.year].fall =
-                                    _this.flowerTimes[ft.year].winter =
-                                        ft.times;
-                    }
-                    else {
-                        _this.flowerTimes[ft.year] = _.clone(ft.times);
-                    }
-                });
-            });
-        };
-        PlantDetail.prototype.attached = function () {
-            $('.ui.checkbox', this.el).checkbox();
-        };
-        PlantDetail.prototype.detached = function () {
-            $('.ui.checkbox', this.el).checkbox('destroy');
-        };
-        PlantDetail.prototype.nextSeason = function () {
-            this.currentYear++;
-            this.verifyCurrentSeason();
-        };
-        PlantDetail.prototype.previousSeason = function () {
-            this.currentYear--;
-            this.verifyCurrentSeason();
-        };
-        PlantDetail.prototype.verifyCurrentSeason = function () {
-            if (!this.seasons[this.currentYear]) {
-                this.seasons[this.currentYear] = new SeasonsYear();
-            }
-            if (!this.propagationTimes[this.currentYear]) {
-                this.propagationTimes[this.currentYear] = new SeasonsYear();
-            }
-            if (!this.flowerTimes[this.currentYear]) {
-                this.flowerTimes[this.currentYear] = new SeasonsYear();
-            }
-        };
-        PlantDetail.prototype.cancel = function () {
-            this.controller.cancel();
-        };
-        PlantDetail.prototype.save = function () {
-            var _this = this;
-            var error;
-            _.forEach(this.flowerTimes, function (value, key) {
-                if (!value || _.values(value).some(function (v) { return !numeral(v).value(); }))
-                    error = "Please enter the number of weeks for each flower time in " + key;
-            });
-            _.forEach(this.propagationTimes, function (value, key) {
-                if (!value || _.values(value).some(function (v) { return !numeral(v).value(); }))
-                    error = "Please enter the number of weeks for each propagation time in " + key;
-            });
-            _.forEach(this.seasons, function (value, key) {
-                if (_.values(value).some(function (v) { return !numeral(v).value(); }))
-                    error = "Please enter the weeks for each season in " + key;
-            });
-            if (!this.plant.cuttingsPerPot)
-                error = 'Please enter the cuttings per pot';
-            if (!this.plant.crop)
-                error = 'Please enter the crop';
-            if (!this.plant.size)
-                error = 'Please enter the size';
-            if (error) {
-                this.dialogService.open({ viewModel: error_notification_1.ErrorNotification, model: error });
-                return;
-            }
-            var plant = _.clone(this.plant);
-            plant.size = numeral(plant.size).value().toString();
-            plant.name = plant.size + "\" " + plant.crop;
-            plant.cuttingsPerPot = numeral(plant.cuttingsPerPot).value();
-            var half = numeral(plant.cuttingsPerTable.half).value();
-            plant.cuttingsPerTable = {
-                tight: numeral(plant.cuttingsPerTable.tight).value(),
-                full: numeral(plant.cuttingsPerTable.full).value()
-            };
-            if (half) {
-                plant.cuttingsPerTable.half = half;
-            }
-            var seasons = [], propagationTimes = [], flowerTimes = [];
-            _.forEach(this.seasons, function (value, key) {
-                var year = numeral(key).value();
-                Object.keys(value).forEach(function (seasonName) {
-                    var week = numeral(value[seasonName]).value(), season = {
-                        year: year,
-                        name: seasonName,
-                        week: {}
-                    };
-                    season.week[plant.crop] = week;
-                    seasons.push(season);
-                });
-            });
-            _.forEach(this.propagationTimes, function (value, key) {
-                var year = numeral(key).value(), propagationTime = {
-                    plant: plant.name,
-                    year: year,
-                    times: new SeasonsYear()
-                };
-                Object.keys(value).forEach(function (seasonName) {
-                    var weeks = numeral(value[seasonName]).value();
-                    propagationTime.times[seasonName] = weeks;
-                });
-                propagationTimes.push(propagationTime);
-            });
-            _.forEach(this.flowerTimes, function (value, key) {
-                var year = numeral(key).value(), flowerTime = {
-                    plant: plant.name,
-                    year: year,
-                    times: new SeasonsYear()
-                };
-                Object.keys(value).forEach(function (seasonName) {
-                    var weeks = numeral(value[seasonName]).value();
-                    flowerTime.times[seasonName] = weeks;
-                });
-                flowerTimes.push(flowerTime);
-            });
-            this.referenceService.savePlant(plant, seasons, propagationTimes, flowerTimes)
-                .then(function () {
-                _this.controller.close(true, plant);
-            })
-                .catch(function (err) {
-                log_1.log.error(err);
-                alert(err);
-            });
-        };
-        PlantDetail.prototype.delete = function () {
-            var _this = this;
-            this.dialogService.open({ viewModel: prompt_1.Prompt, model: 'Are you sure you want to delete this plant?' })
-                .whenClosed(function (result) {
-                if (result.wasCancelled)
-                    return;
-                _this.referenceService.deletePlant(_this.plant)
-                    .then(function () {
-                    _this.controller.close(true, _this.plant);
-                })
-                    .catch(function (err) {
-                    log_1.log.error(err);
-                    alert(err);
-                });
-            });
-        };
-        Object.defineProperty(PlantDetail.prototype, "isNew", {
-            get: function () {
-                return !this.plant.id;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(PlantDetail.prototype, "currentSeasonsYear", {
-            get: function () {
-                return this.seasons[this.currentYear];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(PlantDetail.prototype, "currentPropationTimesYear", {
-            get: function () {
-                return this.propagationTimes[this.currentYear];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(PlantDetail.prototype, "currentFlowerTimesYear", {
-            get: function () {
-                return this.flowerTimes[this.currentYear];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        PlantDetail = __decorate([
-            aurelia_framework_1.autoinject,
-            __metadata("design:paramtypes", [reference_service_1.ReferenceService, aurelia_dialog_1.DialogService,
-                aurelia_dialog_1.DialogController])
-        ], PlantDetail);
-        return PlantDetail;
-    }());
-    exports.PlantDetail = PlantDetail;
-    function position(modalContainer, modalOverlay) {
-        var $container = $(modalContainer), $aiHeader = $container.find('ux-dialog-header'), $aiFooter = $container.find('ux-dialog-footer'), $aiBody = $container.find('ux-dialog-body'), headerHeight = $aiHeader.outerHeight(), footerHeight = $aiFooter.outerHeight(), bodyHeight = "calc(100% - " + (footerHeight + headerHeight) + "px)";
-        $aiBody.css({ height: bodyHeight });
-    }
-});
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -6394,6 +6089,332 @@ define('resources/views/recipes/task-detail',["require", "exports", "../../servi
         return TaskDetail;
     }());
     exports.TaskDetail = TaskDetail;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/views/plants/index',["require", "exports", "aurelia-framework", "aurelia-event-aggregator", "aurelia-dialog", "../../services/database", "../../services/data/reference-service", "../../models/plant", "./plant-detail"], function (require, exports, aurelia_framework_1, aurelia_event_aggregator_1, aurelia_dialog_1, database_1, reference_service_1, plant_1, plant_detail_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var CropIndex = (function () {
+        function CropIndex(referenceService, dialogService, events) {
+            this.referenceService = referenceService;
+            this.dialogService = dialogService;
+            this.events = events;
+            this.loadPlants();
+        }
+        CropIndex.prototype.activate = function () {
+            this.plantSyncChangeSubscription = this.events.subscribe(database_1.Database.PlantsSyncChangeEvent, this.loadPlants.bind(this));
+        };
+        CropIndex.prototype.deactivate = function () {
+            this.plantSyncChangeSubscription.dispose();
+        };
+        CropIndex.prototype.loadPlants = function () {
+            var _this = this;
+            return this.referenceService.plants()
+                .then(function (result) { return _this.plants = _.sortBy(result, function (p) { return p.crop.toLowerCase() + p.size; }); });
+        };
+        CropIndex.prototype.cuttingsPerTable = function (plant) {
+            if (typeof plant.cuttingsPerTable === 'number')
+                return plant.cuttingsPerTable;
+            return _.reduce([plant_1.Spacings.Tight, plant_1.Spacings.Half, plant_1.Spacings.Full], function (memo, space) {
+                var value = plant.cuttingsPerTable[space];
+                if (typeof value !== 'undefined') {
+                    memo.push(space + ": " + value);
+                }
+                return memo;
+            }, []).join(', ');
+        };
+        CropIndex.prototype.addPlant = function () {
+            var _this = this;
+            this.dialogService.open({
+                viewModel: plant_detail_1.PlantDetail,
+                model: new plant_1.PlantDocument()
+            }).whenClosed(function (result) {
+                if (result.wasCancelled)
+                    return;
+                _this.loadPlants();
+            });
+        };
+        CropIndex.prototype.detail = function (plant) {
+            var _this = this;
+            this.dialogService.open({
+                viewModel: plant_detail_1.PlantDetail,
+                model: plant
+            }).whenClosed(function (result) {
+                if (result.wasCancelled)
+                    return;
+                _this.loadPlants();
+            });
+        };
+        CropIndex = __decorate([
+            aurelia_framework_1.autoinject,
+            __metadata("design:paramtypes", [reference_service_1.ReferenceService, aurelia_dialog_1.DialogService,
+                aurelia_event_aggregator_1.EventAggregator])
+        ], CropIndex);
+        return CropIndex;
+    }());
+    exports.CropIndex = CropIndex;
+});
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+define('resources/views/plants/plant-detail',["require", "exports", "aurelia-framework", "aurelia-dialog", "../controls/error-notification", "../controls/prompt", "../../services/log", "../../services/data/reference-service"], function (require, exports, aurelia_framework_1, aurelia_dialog_1, error_notification_1, prompt_1, log_1, reference_service_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var SeasonsYear = (function () {
+        function SeasonsYear() {
+            this.spring = 0;
+            this.summer = 0;
+            this.fall = 0;
+            this.winter = 0;
+        }
+        return SeasonsYear;
+    }());
+    var PlantDetail = (function () {
+        function PlantDetail(referenceService, dialogService, controller) {
+            this.referenceService = referenceService;
+            this.dialogService = dialogService;
+            this.controller = controller;
+            this.seasons = {};
+            this.propagationTimes = {};
+            this.flowerTimes = {};
+            this.currentYear = new Date().getFullYear();
+            controller.settings.lock = true;
+            controller.settings.position = position;
+        }
+        PlantDetail.prototype.activate = function (plant) {
+            var _this = this;
+            this.plant = _.clone(plant);
+            if (this.plant.size && !this.plant.size.endsWith('"'))
+                this.plant.size += '"';
+            this.referenceService.seasons()
+                .then(function (seasons) {
+                seasons.forEach(function (s) {
+                    if (!_this.seasons[s.year]) {
+                        _this.seasons[s.year] = new SeasonsYear();
+                    }
+                    var week = typeof s.week === 'number' ? s.week : s.week[_this.plant.crop];
+                    _this.seasons[s.year][s.name] = week;
+                    _this.verifyCurrentSeason();
+                });
+            });
+            this.referenceService.propagationTimes()
+                .then(function (propagationTimes) {
+                propagationTimes.filter(function (pt) { return pt.plant === _this.plant.name; })
+                    .forEach(function (pt) {
+                    _this.propagationTimes[pt.year] = new SeasonsYear();
+                    if (typeof pt.times === 'number') {
+                        _this.propagationTimes[pt.year].spring =
+                            _this.propagationTimes[pt.year].summer =
+                                _this.propagationTimes[pt.year].fall =
+                                    _this.propagationTimes[pt.year].winter =
+                                        pt.times;
+                    }
+                    else {
+                        _this.propagationTimes[pt.year] = _.clone(pt.times);
+                    }
+                });
+            });
+            this.referenceService.flowerTimes()
+                .then(function (flowerTimes) {
+                flowerTimes.filter(function (ft) { return ft.plant === _this.plant.name; })
+                    .forEach(function (ft) {
+                    _this.flowerTimes[ft.year] = new SeasonsYear();
+                    if (typeof ft.times === 'number') {
+                        _this.flowerTimes[ft.year].spring =
+                            _this.flowerTimes[ft.year].summer =
+                                _this.flowerTimes[ft.year].fall =
+                                    _this.flowerTimes[ft.year].winter =
+                                        ft.times;
+                    }
+                    else {
+                        _this.flowerTimes[ft.year] = _.clone(ft.times);
+                    }
+                });
+            });
+        };
+        PlantDetail.prototype.attached = function () {
+            $('.ui.checkbox', this.el).checkbox();
+        };
+        PlantDetail.prototype.detached = function () {
+            $('.ui.checkbox', this.el).checkbox('destroy');
+        };
+        PlantDetail.prototype.nextSeason = function () {
+            this.currentYear++;
+            this.verifyCurrentSeason();
+        };
+        PlantDetail.prototype.previousSeason = function () {
+            this.currentYear--;
+            this.verifyCurrentSeason();
+        };
+        PlantDetail.prototype.verifyCurrentSeason = function () {
+            if (!this.seasons[this.currentYear]) {
+                this.seasons[this.currentYear] = new SeasonsYear();
+            }
+            if (!this.propagationTimes[this.currentYear]) {
+                this.propagationTimes[this.currentYear] = new SeasonsYear();
+            }
+            if (!this.flowerTimes[this.currentYear]) {
+                this.flowerTimes[this.currentYear] = new SeasonsYear();
+            }
+        };
+        PlantDetail.prototype.cancel = function () {
+            this.controller.cancel();
+        };
+        PlantDetail.prototype.save = function () {
+            var _this = this;
+            var error;
+            _.forEach(this.flowerTimes, function (value, key) {
+                if (!value || _.values(value).some(function (v) { return !numeral(v).value(); }))
+                    error = "Please enter the number of weeks for each flower time in " + key;
+            });
+            _.forEach(this.propagationTimes, function (value, key) {
+                if (!value || _.values(value).some(function (v) { return !numeral(v).value(); }))
+                    error = "Please enter the number of weeks for each propagation time in " + key;
+            });
+            _.forEach(this.seasons, function (value, key) {
+                if (_.values(value).some(function (v) { return !numeral(v).value(); }))
+                    error = "Please enter the weeks for each season in " + key;
+            });
+            if (!this.plant.cuttingsPerPot)
+                error = 'Please enter the cuttings per pot';
+            if (!this.plant.crop)
+                error = 'Please enter the crop';
+            if (!this.plant.size)
+                error = 'Please enter the size';
+            if (error) {
+                this.dialogService.open({ viewModel: error_notification_1.ErrorNotification, model: error });
+                return;
+            }
+            var plant = _.clone(this.plant);
+            plant.size = numeral(plant.size).value().toString();
+            plant.name = plant.size + "\" " + plant.crop;
+            plant.cuttingsPerPot = numeral(plant.cuttingsPerPot).value();
+            var half = numeral(plant.cuttingsPerTable.half).value();
+            plant.cuttingsPerTable = {
+                tight: numeral(plant.cuttingsPerTable.tight).value(),
+                full: numeral(plant.cuttingsPerTable.full).value()
+            };
+            if (half) {
+                plant.cuttingsPerTable.half = half;
+            }
+            var seasons = [], propagationTimes = [], flowerTimes = [];
+            _.forEach(this.seasons, function (value, key) {
+                var year = numeral(key).value();
+                Object.keys(value).forEach(function (seasonName) {
+                    var week = numeral(value[seasonName]).value(), season = {
+                        year: year,
+                        name: seasonName,
+                        week: {}
+                    };
+                    season.week[plant.crop] = week;
+                    seasons.push(season);
+                });
+            });
+            _.forEach(this.propagationTimes, function (value, key) {
+                var year = numeral(key).value(), propagationTime = {
+                    plant: plant.name,
+                    year: year,
+                    times: new SeasonsYear()
+                };
+                Object.keys(value).forEach(function (seasonName) {
+                    var weeks = numeral(value[seasonName]).value();
+                    propagationTime.times[seasonName] = weeks;
+                });
+                propagationTimes.push(propagationTime);
+            });
+            _.forEach(this.flowerTimes, function (value, key) {
+                var year = numeral(key).value(), flowerTime = {
+                    plant: plant.name,
+                    year: year,
+                    times: new SeasonsYear()
+                };
+                Object.keys(value).forEach(function (seasonName) {
+                    var weeks = numeral(value[seasonName]).value();
+                    flowerTime.times[seasonName] = weeks;
+                });
+                flowerTimes.push(flowerTime);
+            });
+            this.referenceService.savePlant(plant, seasons, propagationTimes, flowerTimes)
+                .then(function () {
+                _this.controller.close(true, plant);
+            })
+                .catch(function (err) {
+                log_1.log.error(err);
+                alert(err);
+            });
+        };
+        PlantDetail.prototype.delete = function () {
+            var _this = this;
+            this.dialogService.open({ viewModel: prompt_1.Prompt, model: 'Are you sure you want to delete this plant?' })
+                .whenClosed(function (result) {
+                if (result.wasCancelled)
+                    return;
+                _this.referenceService.deletePlant(_this.plant)
+                    .then(function () {
+                    _this.controller.close(true, _this.plant);
+                })
+                    .catch(function (err) {
+                    log_1.log.error(err);
+                    alert(err);
+                });
+            });
+        };
+        Object.defineProperty(PlantDetail.prototype, "isNew", {
+            get: function () {
+                return !this.plant.id;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PlantDetail.prototype, "currentSeasonsYear", {
+            get: function () {
+                return this.seasons[this.currentYear];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PlantDetail.prototype, "currentPropationTimesYear", {
+            get: function () {
+                return this.propagationTimes[this.currentYear];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PlantDetail.prototype, "currentFlowerTimesYear", {
+            get: function () {
+                return this.flowerTimes[this.currentYear];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        PlantDetail = __decorate([
+            aurelia_framework_1.autoinject,
+            __metadata("design:paramtypes", [reference_service_1.ReferenceService, aurelia_dialog_1.DialogService,
+                aurelia_dialog_1.DialogController])
+        ], PlantDetail);
+        return PlantDetail;
+    }());
+    exports.PlantDetail = PlantDetail;
+    function position(modalContainer, modalOverlay) {
+        var $container = $(modalContainer), $aiHeader = $container.find('ux-dialog-header'), $aiFooter = $container.find('ux-dialog-footer'), $aiBody = $container.find('ux-dialog-body'), headerHeight = $aiHeader.outerHeight(), footerHeight = $aiFooter.outerHeight(), bodyHeight = "calc(100% - " + (footerHeight + headerHeight) + "px)";
+        $aiBody.css({ height: bodyHeight });
+    }
 });
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -7202,7 +7223,7 @@ define('resources/services/domain/models/calculator-zone',["require", "exports",
     exports.CalculatorZone = CalculatorZone;
 });
 
-define('text!resources/../../package.json',[],function () { return '{\r\n  "name": "GreenRP",\r\n  "description": "The Greenhouse Resource Planning application for Boekestyn Greenhouses.",\r\n  "publisher": "Resounding Software",\r\n  "version": "1.8.4",\r\n  "repository": {\r\n    "type": "git",\r\n    "url": "https://github.com/Resounding/GreenRP"\r\n  },\r\n  "license": "MIT",\r\n  "dependencies": {\r\n    "aurelia-animator-css": "^1.0.2",\r\n    "aurelia-bootstrapper": "^2.1.1",\r\n    "aurelia-dialog": "^1.0.0-rc.1.0.3",\r\n    "aurelia-fetch-client": "^1.1.3",\r\n    "aurelia-pal": "^1.4.0",\r\n    "bluebird": "^3.5.0",\r\n    "crypto-js": "^3.1.9-1",\r\n    "gulp": "gulpjs/gulp#4.0",\r\n    "jquery": "^3.1.0",\r\n    "moment": "^2.18.1",\r\n    "numeral": "^2.0.6",\r\n    "pouchdb": "^6.3.4",\r\n    "pouchdb-find": "^6.3.4",\r\n    "requirejs": "^2.3.3",\r\n    "semantic-ui-calendar": "^0.0.8",\r\n    "semantic-ui-css": "^2.2.12",\r\n    "text": "github:requirejs/text#latest",\r\n    "toastr": "^2.1.2",\r\n    "underscore": "^1.8.3",\r\n    "whatwg-fetch": "^2.0.3"\r\n  },\r\n  "peerDependencies": {},\r\n  "devDependencies": {\r\n    "@types/moment": "^2.13.0",\r\n    "@types/node": "^6.0.45",\r\n    "@types/numeral": "^0.0.19",\r\n    "@types/pouchdb-core": "^6.1.7",\r\n    "@types/pouchdb-find": "^6.3.0",\r\n    "@types/underscore": "^1.7.36",\r\n    "@types/whatwg-fetch": "^0.0.33",\r\n    "aurelia-cli": "^0.30.0",\r\n    "aurelia-testing": "^1.0.0-beta.3.0.1",\r\n    "aurelia-tools": "^1.0.0",\r\n    "browser-sync": "^2.13.0",\r\n    "connect-history-api-fallback": "^1.2.0",\r\n    "event-stream": "^3.3.3",\r\n    "gulp": "gulpjs/gulp#4.0",\r\n    "gulp-changed-in-place": "^2.0.3",\r\n    "gulp-less": "^3.1.0",\r\n    "gulp-notify": "^2.2.0",\r\n    "gulp-rename": "^1.2.2",\r\n    "gulp-sourcemaps": "^2.0.0-alpha",\r\n    "gulp-tslint": "^5.0.0",\r\n    "gulp-typescript": "^3.1.4",\r\n    "jasmine-core": "^2.4.1",\r\n    "karma": "^0.13.22",\r\n    "karma-chrome-launcher": "^1.0.1",\r\n    "karma-jasmine": "^1.0.2",\r\n    "karma-typescript-preprocessor": "^0.2.1",\r\n    "tslint": "^3.11.0",\r\n    "typescript": "^2.5.2",\r\n    "typings": "^2.1.1",\r\n    "uglify-js": "^2.6.3"\r\n  }\r\n}\r\n';});
+define('text!resources/../../package.json',[],function () { return '{\r\n  "name": "GreenRP",\r\n  "description": "The Greenhouse Resource Planning application for Boekestyn Greenhouses.",\r\n  "publisher": "Resounding Software",\r\n  "version": "1.8.5",\r\n  "repository": {\r\n    "type": "git",\r\n    "url": "https://github.com/Resounding/GreenRP"\r\n  },\r\n  "license": "MIT",\r\n  "dependencies": {\r\n    "aurelia-animator-css": "^1.0.2",\r\n    "aurelia-bootstrapper": "^2.1.1",\r\n    "aurelia-dialog": "^1.0.0-rc.1.0.3",\r\n    "aurelia-fetch-client": "^1.1.3",\r\n    "aurelia-pal": "^1.4.0",\r\n    "bluebird": "^3.5.0",\r\n    "crypto-js": "^3.1.9-1",\r\n    "gulp": "gulpjs/gulp#4.0",\r\n    "jquery": "^3.1.0",\r\n    "moment": "^2.18.1",\r\n    "numeral": "^2.0.6",\r\n    "pouchdb": "^6.3.4",\r\n    "pouchdb-find": "^6.3.4",\r\n    "requirejs": "^2.3.3",\r\n    "semantic-ui-calendar": "^0.0.8",\r\n    "semantic-ui-css": "^2.2.12",\r\n    "text": "github:requirejs/text#latest",\r\n    "toastr": "^2.1.2",\r\n    "underscore": "^1.8.3",\r\n    "whatwg-fetch": "^2.0.3"\r\n  },\r\n  "peerDependencies": {},\r\n  "devDependencies": {\r\n    "@types/moment": "^2.13.0",\r\n    "@types/node": "^6.0.45",\r\n    "@types/numeral": "^0.0.19",\r\n    "@types/pouchdb-core": "^6.1.7",\r\n    "@types/pouchdb-find": "^6.3.0",\r\n    "@types/underscore": "^1.7.36",\r\n    "@types/whatwg-fetch": "^0.0.33",\r\n    "aurelia-cli": "^0.30.0",\r\n    "aurelia-testing": "^1.0.0-beta.3.0.1",\r\n    "aurelia-tools": "^1.0.0",\r\n    "browser-sync": "^2.13.0",\r\n    "connect-history-api-fallback": "^1.2.0",\r\n    "event-stream": "^3.3.3",\r\n    "gulp": "gulpjs/gulp#4.0",\r\n    "gulp-changed-in-place": "^2.0.3",\r\n    "gulp-less": "^3.1.0",\r\n    "gulp-notify": "^2.2.0",\r\n    "gulp-rename": "^1.2.2",\r\n    "gulp-sourcemaps": "^2.0.0-alpha",\r\n    "gulp-tslint": "^5.0.0",\r\n    "gulp-typescript": "^3.1.4",\r\n    "jasmine-core": "^2.4.1",\r\n    "karma": "^0.13.22",\r\n    "karma-chrome-launcher": "^1.0.1",\r\n    "karma-jasmine": "^1.0.2",\r\n    "karma-typescript-preprocessor": "^0.2.1",\r\n    "tslint": "^3.11.0",\r\n    "typescript": "^2.5.2",\r\n    "typings": "^2.1.1",\r\n    "uglify-js": "^2.6.3"\r\n  }\r\n}\r\n';});
 
 define('text!resources/views/app.html', ['module'], function(module) { module.exports = "<template>\n    <require from=\"styles/styles.css\"></require>\n    <require from=\"./controls/nav-bar\"></require>\n    <require from=\"./zones/zone-detail\"></require>\n    <require from=\"./weeks/week-detail\"></require>\n\n    <nav-bar router.bind=\"router\"></nav-bar>\n\n    <div class=\"pusher\">\n        <div class=\"ui main container\">\n            <router-view></router-view>\n            <footer>\n                <hr>\n                <p class=\"\" innerhtml.one-time=\"footerText\"></p>\n            </footer>\n        </div>\n    </div>\n    <div id=\"zone-detail-sidebar\" class=\"ui right sidebar super-duper wide\">\n        <zone-detail></zone-detail>\n    </div>\n    <div id=\"week-detail-sidebar\" class=\"ui right sidebar super wide\">\n        <week-detail></week-detail>\n    </div>    \n</template>\n"; });
 define('text!styles/activities.css', ['module'], function(module) { module.exports = "#activity-detail-container .button-container {\n  padding: 0;\n  display: inline-block;\n}\n#activity-detail-container .button-container.fixed {\n  transition: all 0.5s ease;\n  position: fixed;\n  padding: 1em;\n  background-color: #fff;\n}\n@media only screen and (max-width: 1199px) and (min-width: 992px) {\n  #activity-detail-container .button-container.fixed {\n    width: 933px;\n  }\n}\n#activity-detail-container.new .journal {\n  display: none;\n}\n#activities-list > .filters.expanded .button.positive {\n  margin-bottom: 10px;\n}\n@media only screen and (max-width: 767px) {\n  #activities-list > .filters.collapsed .ui.clearing.divider,\n  #activities-list > .filters.collapsed .filter-grid {\n    display: none;\n  }\n}\n#activities-list .card.in-progress {\n  background-color: rgba(223, 240, 216, 0.6);\n}\n#activities-list .card.overdue {\n  background-color: rgba(242, 222, 222, 0.6);\n}\n#activities-list .card.incomplete .header,\n#activities-list .card.complete .header {\n  opacity: 0.45;\n}\n#activities-list .card.incomplete .dropdown.icon,\n#activities-list .card.complete .dropdown.icon {\n  display: none;\n}\n"; });
@@ -7218,24 +7239,24 @@ define('text!resources/views/activities/complete-dialog.html', ['module'], funct
 define('text!styles/order-table.css', ['module'], function(module) { module.exports = "order-table {\n  display: block;\n  margin-bottom: 20px;\n}\n"; });
 define('text!resources/views/activities/incomplete-dialog.html', ['module'], function(module) { module.exports = "<template>\n    <ux-dialog>\n        <ux-dialog-body>\n            <form class=\"ui form segment ${errors.length ? 'error' : ''}\">\n                <div class=\"fields row\">\n                    <div class=\"required field sixteen wide\">\n                        <label for=\"reason\">Reason activity was not completed:</label>\n                        <textarea id=\"reason\" value.bind=\"reason\" rows=\"3\" attach-focus=\"true\"></textarea>\n                    </div>                    \n                </div>\n                <div class=\"ui divider\" show.bind=\"errors.length\">&nbsp;</div>\n                </div>\n                <div class=\"ui error message\" show.bind=\"errors.length\">\n                    <div class=\"ui list\" repeat.for=\"e of errors\">\n                        <div>${e}</div>\n                    </div>\n                </div>\n            </form>\n        </ux-dialog-body>\n\n        <ux-dialog-footer>\n            <button type=\"button\" click.trigger=\"controller.cancel()\" class=\"ui button basic\">Cancel</button>\n            <button type=\"button\" click.trigger=\"save()\" class=\"ui button primary\">OK</button>\n        </ux-dialog-footer>\n    </ux-dialog>\n</template>"; });
 define('text!styles/plant-detail.css', ['module'], function(module) { module.exports = "ux-dialog#plant-detail {\n  width: 800px;\n}\nux-dialog#plant-detail ux-dialog-header h2 {\n  display: inline-block;\n  margin-top: 0;\n}\n"; });
-define('text!resources/views/activities/index.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/activities.css\"></require>\r\n    <require from=\"./activity-card\"></require>\r\n\r\n    <div class=\"ui\" id=\"activities-list\" ref=\"el\">\r\n        <div class=\"filters ui clearing segment ${filtersExpanded ? 'expanded' : 'collapsed'}\">\r\n            <a class=\"basic ui positive icon button left floated\" route-href=\"route: activity-detail; params.bind: { id: 'new' }\">\r\n                <i class=\"plus icon\"></i>\r\n                New Activity\r\n            </a>\r\n            <a class=\"basic ui secondary icon button right floated\" route-href=\"route: activities-by-crop\">\r\n                <i class=\"icon tree\"></i>\r\n                <span class=\"hide-mobile\">By Crop</span>\r\n            </a>\r\n            <a class=\"basic ui secondary icon button right floated\" route-href=\"route: activities-by-recipe\">\r\n                <i class=\"icon address card outline\"></i>\r\n                <span class=\"hide-mobile\">By Recipe</span>\r\n            </a>\r\n            <button class=\"ui icon button basic right floated hide-desktop mini\" click.trigger=\"toggleFiltersExpanded()\">\r\n                <i class=\"dropdown icon ${filtersExpanded ? 'vertically flipped' : ''}\"></i>\r\n            </button>\r\n            <div class=\"ui clearing divider\"></div>\r\n            <div class=\"filter-grid ui two column grid stackable container\">\r\n                <div class=\"column\">\r\n                    <div class=\"ui toggle checkbox\">\r\n                        <input type=\"checkbox\" id=\"showall\" checked.bind=\"showAll\">\r\n                        <label for=\"showall\">Show All Users</label>\r\n                    </div>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <div class=\"ui toggle checkbox\">\r\n                        <input type=\"checkbox\" id=\"showcomplete\" checked.bind=\"showCompleted\">\r\n                        <label for=\"showcomplete\">Show Completed Items</label>\r\n                    </div>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <div class=\"ui toggle checkbox\">\r\n                        <input type=\"checkbox\" id=\"showincomplete\" checked.bind=\"showIncomplete\">\r\n                        <label for=\"showincomplete\">Show Incomplete Items</label>\r\n                    </div>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <span>\r\n                        Work Types:\r\n                        <div class=\"ui inline dropdown work-type\">\r\n                            <div class=\"text\">All</div>\r\n                            <i class=\"dropdown icon\"></i>\r\n                            <div class=\"menu\">\r\n                                <div class=\"item\" repeat.for=\"workType of workTypes\">${workType}</div>\r\n                            </div>\r\n                        </div>                        \r\n                    </span>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <label for=\"week\">Week:</label>\r\n                    <div class=\"ui inline dropdown week\">\r\n                        <div class=\"text\"></div>\r\n                        <i class=\"dropdown icon\"></i>\r\n                        <div class=\"menu\">\r\n                            <div class=\"item\" repeat.for=\"week of weeks\" data-value=\"${week.id}\">${week.text}</div>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <label for=\"week\">Zone:</label>\r\n                    <div class=\"ui inline dropdown zone\">\r\n                        <div class=\"text\"></div>\r\n                        <i class=\"dropdown icon\"></i>\r\n                        <div class=\"menu\">\r\n                            <div class=\"item\" repeat.for=\"zone of zones\">${zone}</div>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n        </div>\r\n        <div class=\"ui cards\" show.bind=\"activities.length\">\r\n            <activity-card users.bind=\"users\" activity.bind=\"a\" repeat.for=\"a of activities | sort:'date'\"></activity-card>\r\n        </div>\r\n        <div class=\"ui message\" hide.bind=\"activities.length\">\r\n            <div class=\"header\">No Activities</div>\r\n            <p>\r\n                There aren't any Activities. You can change the filters above, or\r\n                <a route-href=\"route: activity-detail; params.bind: { id: 'new' }\">add an activity</a> now.\r\n            </p>\r\n        </div>\r\n    </div>\r\n</template>"; });
 define('text!styles/recipes.css', ['module'], function(module) { module.exports = "#recipe-detail .has-zone .plant,\n#recipe-detail .has-plant .zone {\n  display: none;\n}\n"; });
-define('text!resources/views/activities/journal-detail.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/activities.css\"></require>\r\n\r\n    <div class=\"ui\" ref=\"el\">\r\n        <div class=\"button-container\">\r\n            <button type=\"button\" class=\"ui basic icon button\" click.delegate=\"editActivity()\" data-tooltip=\"Click to edit the Activity information\" data-position=\"bottom right\">\r\n                <i class=\"edit button icon\"></i>\r\n                <span class=\"hide-mobile\">Edit Activity</span>\r\n            </button>\r\n            <a class=\"ui basic icon button\" route-href=\"route: activities\">\r\n                <i class=\"undo button icon\"></i>\r\n                <span class=\"hide-mobile\">Cancel</span>\r\n            </a>\r\n            <button type=\"button\" class=\"ui basic primary icon button\" click.delegate=\"save()\">\r\n                <i class=\"save button icon\"></i>\r\n                <span class=\"hide-mobile\">Save</span>\r\n            </button>\r\n        </div>\r\n\r\n        <h2>${title}</h2>\r\n\r\n        <form class=\"ui form ${errors.length ? 'error' : ''}\">\r\n            <div class=\"fields row\">\r\n                <div class=\"field\">\r\n                    <label for=\"completion-status\">Activity was not completed&nbsp;&nbsp;</label>\r\n                </div>\r\n                <div class=\"field\">\r\n                    <div class=\"ui fitted toggle checkbox\">\r\n                        <input type=\"checkbox\" id=\"completion-status\" checked.bind=\"completed\">\r\n                        <label></label>\r\n                    </div>\r\n                </div>\r\n                <div class=\"field\">\r\n                    <label for=\"completion-status\">&nbsp;&nbsp;Activity was completed</label>\r\n                </div>\r\n                <div class=\"field\" show.bind=\"completed\">\r\n                    <label for=\"completedDate\">Completed:</label>\r\n                    <input type=\"date\" value.bind=\"activity.journal.completedDate\">\r\n                </div>\r\n            </div>\r\n            <div class=\"fields row\" show.bind=\"completed && isMeasurement\">\r\n                <div class=\"field four wide\">\r\n                    <label for=\"measurement\">Measurement</label>\r\n                    <div class=\"ui labeled input\">\r\n                        <input type=\"text\" id=\"measurement\" value.bind=\"activity.journal.measurement\">\r\n                        <div class=\"ui label\">${activity.unitOfMeasure}</div>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n            <div class=\"fields row\" show.bind=\"completed && !isMeasurement\">\r\n                <div class=\"field sixteen wide\">\r\n                    <label for=\"measurement\">Checklist</label>\r\n                    <div class=\"ui ordered list\">\r\n                        <template repeat.for=\"item of activity.journal.checklist\">\r\n                            <div class=\"item\">\r\n                                <div class=\"ui left action input\">                                \r\n                                    <button type=\"button\" class=\"mini ui icon button\" tabindex=\"-1\" click.delegate=\"removeFromChecklist($index)\" data-tooltip=\"Remove this item\">\r\n                                        <i class=\"icon button trash\"></i>\r\n                                    </button>\r\n                                    <input type=\"text\" value.bind=\"item.value\" keypress.delegate=\"onChecklistItemKeyPress($event, $index)\">\r\n                                </div>\r\n                            </div>\r\n                        </template>                        \r\n                    </div>\r\n                    <div class=\"ui list\">\r\n                        <div class=\"item\">\r\n                            <button type=\"button\" class=\"ui basic button\" click.delegate=\"addToChecklist()\">\r\n                                <i class=\"icon plus\"></i>\r\n                                Add an item\r\n                            </button>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n            <div class=\"fields row\">\r\n                <div class=\"field sixteen wide\">\r\n                    <label for=\"notes\">Notes</label>\r\n                    <textarea id=\"notes\" value.bind=\"activity.journal.notes\"></textarea>\r\n                </div>                    \r\n            </div>\r\n            <div class=\"ui divider\">&nbsp;</div>\r\n            </div>\r\n            <div class=\"ui error message\" show.bind=\"errors.length\">\r\n                <ul class=\"ui list\" repeat.for=\"e of errors\">\r\n                    <li>${e}</li>\r\n                </ul>\r\n            </div>\r\n        </form>\r\n    </div>\r\n</template>"; });
+define('text!resources/views/activities/index.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/activities.css\"></require>\r\n    <require from=\"./activity-card\"></require>\r\n\r\n    <div class=\"ui\" id=\"activities-list\" ref=\"el\">\r\n        <div class=\"filters ui clearing segment ${filtersExpanded ? 'expanded' : 'collapsed'}\">\r\n            <a class=\"basic ui positive icon button left floated\" route-href=\"route: activity-detail; params.bind: { id: 'new' }\">\r\n                <i class=\"plus icon\"></i>\r\n                New Activity\r\n            </a>\r\n            <a class=\"basic ui secondary icon button right floated\" route-href=\"route: activities-by-crop\">\r\n                <i class=\"icon tree\"></i>\r\n                <span class=\"hide-mobile\">By Crop</span>\r\n            </a>\r\n            <a class=\"basic ui secondary icon button right floated\" route-href=\"route: activities-by-recipe\">\r\n                <i class=\"icon address card outline\"></i>\r\n                <span class=\"hide-mobile\">By Recipe</span>\r\n            </a>\r\n            <button class=\"ui icon button basic right floated hide-desktop mini\" click.trigger=\"toggleFiltersExpanded()\">\r\n                <i class=\"dropdown icon ${filtersExpanded ? 'vertically flipped' : ''}\"></i>\r\n            </button>\r\n            <div class=\"ui clearing divider\"></div>\r\n            <div class=\"filter-grid ui two column grid stackable container\">\r\n                <div class=\"column\">\r\n                    <div class=\"ui toggle checkbox\">\r\n                        <input type=\"checkbox\" id=\"showall\" checked.bind=\"showAll\">\r\n                        <label for=\"showall\">Show All Users</label>\r\n                    </div>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <div class=\"ui toggle checkbox\">\r\n                        <input type=\"checkbox\" id=\"showcomplete\" checked.bind=\"showCompleted\">\r\n                        <label for=\"showcomplete\">Show Completed Items</label>\r\n                    </div>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <div class=\"ui toggle checkbox\">\r\n                        <input type=\"checkbox\" id=\"showincomplete\" checked.bind=\"showIncomplete\">\r\n                        <label for=\"showincomplete\">Show Incomplete Items</label>\r\n                    </div>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <span>\r\n                        Work Types:\r\n                        <div class=\"ui inline dropdown work-type\">\r\n                            <div class=\"text\">All</div>\r\n                            <i class=\"dropdown icon\"></i>\r\n                            <div class=\"menu\">\r\n                                <div class=\"item\" repeat.for=\"workType of workTypes\">${workType}</div>\r\n                            </div>\r\n                        </div>                        \r\n                    </span>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <label for=\"week\">Week:</label>\r\n                    <div class=\"ui inline dropdown week\">\r\n                        <div class=\"text\"></div>\r\n                        <i class=\"dropdown icon\"></i>\r\n                        <div class=\"menu\">\r\n                            <div class=\"item\" repeat.for=\"week of weeks\" data-value=\"${week.id}\">${week.text}</div>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n                <div class=\"column\">\r\n                    <label for=\"week\">Zone:</label>\r\n                    <div class=\"ui inline dropdown zone\">\r\n                        <div class=\"text\"></div>\r\n                        <i class=\"dropdown icon\"></i>\r\n                        <div class=\"menu\">\r\n                            <div class=\"item\" repeat.for=\"zone of zones\">${zone}</div>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n        </div>\r\n        <div class=\"ui cards\" show.bind=\"activities.length\">\r\n            <activity-card users.bind=\"users\" activity.bind=\"a\" repeat.for=\"a of activities | sort:'date'\"></activity-card>\r\n        </div>\r\n        <div class=\"ui message\" hide.bind=\"activities.length\">\r\n            <div class=\"header\">No Activities</div>\r\n            <p>\r\n                There aren't any Activities. You can change the filters above, or\r\n                <a route-href=\"route: activity-detail; params.bind: { id: 'new' }\">add an activity</a> now.\r\n            </p>\r\n        </div>\r\n    </div>\r\n</template>"; });
 define('text!styles/reports.css', ['module'], function(module) { module.exports = "ux-dialog-container,\nux-dialog-container > div,\nux-dialog-container > div > div,\nux-dialog-container > div > div > ux-dialog#report-container,\nux-dialog-container > div > div > ux-dialog#report-container > ux-dialog-body {\n  height: 100%;\n  width: 100%;\n  max-width: 1200px;\n  margin-left: auto;\n  margin-right: auto;\n}\nux-dialog-container iframe,\nux-dialog-container > div iframe,\nux-dialog-container > div > div iframe,\nux-dialog-container > div > div > ux-dialog#report-container iframe,\nux-dialog-container > div > div > ux-dialog#report-container > ux-dialog-body iframe {\n  width: 100%;\n  height: 100%;\n}\n"; });
-define('text!resources/views/calculator/calculator.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/calculator.css\"></require>\r\n    <require from=\"../controls/escape-quotes-value-converter\"></require>    \r\n    <require from=\"./order-table\"></require>\r\n\r\n    <ux-dialog id=\"calculator\" ref=\"el\">\r\n        <ux-dialog-body>\r\n            <form class=\"ui form segment\">\r\n                <h4 class=\"ui dividing header\">Requested Order</h4>\r\n                <div class=\"three fields\">\r\n                    <div class=\"field\">\r\n                        <label for=\"customer\">Customer</label>\r\n                        <div class=\"ui search selection dropdown customer\">\r\n                            <input type=\"hidden\" name=\"customer\" id=\"customer\">\r\n                            <i class=\"dropdown icon\"></i>\r\n                            <div class=\"default text\">Choose Customer</div>\r\n                            <div class=\"menu\">\r\n                                <div repeat.for=\"c of customers\" class=\"item\" data-value=\"${c.name}\">${c.name}</div>\r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label>Arrival Date</label>\r\n                        <div class=\"calendar\">\r\n                            <span class=\"date-display\">${dateDisplay}</span>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label for=\"plant\">Plant</label>\r\n                        <select name=\"plant\" id=\"plant\">\r\n                            <option value=\"\">Choose Plant</option>\r\n                            <option repeat.for=\"p of plants\" value.bind=\"p.name | escapeQuotes\">${p.name}</option>\r\n                        </select>\r\n                    </div>\r\n                </div>\r\n                <div class=\"three fields\">\r\n                    <div class=\"ui field\">\r\n                        <div class=\"ui toggle checkbox\">\r\n                            <input type=\"checkbox\" id=\"repeating-order\" checked.bind=\"isRepeatingOrder\">\r\n                            <label for=\"repeating-order\">Repeating Order</label>\r\n                        </div>\r\n                        <div class=\"field fields\" show.bind=\"isRepeatingOrder\">\r\n                            <div class=\"ui field inline eight wide\">\r\n                                <label for=\"repeat-count\"># times:</label>\r\n                                <input type=\"number\" id=\"repeat-count\" value.bind=\"repeatCount & debounce\" style=\"width: 70px\">\r\n                            </div>\r\n                            <div class=\"ui field inline eight wide\">\r\n                                <label for=\"repeat-days\">days apart:</label>\r\n                                <input type=\"number\" id=\"repeat-days\" value.bind=\"repeatDays & debounce\" style=\"width: 70px\">\r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label for=\"pots-per-case\">Pots Per Case</label>\r\n                        <input type=\"number\" name=\"pots-per-case\" id=\"pots-per-case\" value.bind=\"calculator.potsPerCase\" required>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label for=\"quantity\">Quantity</label>\r\n                        <input type=\"number\" id=\"quantity\" name=\"quantity\" value.bind=\"calculator.orderQuantity & debounce\" required>\r\n                    </div>\r\n                </div>\r\n\r\n                <div class=\"ui divider\"></div>\r\n                \r\n                <order-table calculator.bind=\"calculator\"></order-table>\r\n\r\n                <order-table repeat.for=\"c of repeatCalculators\" calculator.bind=\"c\"></order-table>\r\n\r\n            </form>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" class=\"basic ui button\" click.delegate=\"controller.cancel()\">Cancel</button>\r\n            <button type=\"button\" class=\"basic ui primary button\" click.delegate=\"createOrder()\">Save</button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>\r\n"; });
+define('text!resources/views/activities/journal-detail.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/activities.css\"></require>\r\n\r\n    <div class=\"ui\" ref=\"el\">\r\n        <div class=\"button-container\">\r\n            <button type=\"button\" class=\"ui basic icon button\" click.delegate=\"editActivity()\" data-tooltip=\"Click to edit the Activity information\" data-position=\"bottom right\">\r\n                <i class=\"edit button icon\"></i>\r\n                <span class=\"hide-mobile\">Edit Activity</span>\r\n            </button>\r\n            <a class=\"ui basic icon button\" route-href=\"route: activities\">\r\n                <i class=\"undo button icon\"></i>\r\n                <span class=\"hide-mobile\">Cancel</span>\r\n            </a>\r\n            <button type=\"button\" class=\"ui basic primary icon button\" click.delegate=\"save()\">\r\n                <i class=\"save button icon\"></i>\r\n                <span class=\"hide-mobile\">Save</span>\r\n            </button>\r\n        </div>\r\n\r\n        <h2>${title}</h2>\r\n\r\n        <form class=\"ui form ${errors.length ? 'error' : ''}\">\r\n            <div class=\"fields row\">\r\n                <div class=\"field\">\r\n                    <label for=\"completion-status\">Activity was not completed&nbsp;&nbsp;</label>\r\n                </div>\r\n                <div class=\"field\">\r\n                    <div class=\"ui fitted toggle checkbox\">\r\n                        <input type=\"checkbox\" id=\"completion-status\" checked.bind=\"completed\">\r\n                        <label></label>\r\n                    </div>\r\n                </div>\r\n                <div class=\"field\">\r\n                    <label for=\"completion-status\">&nbsp;&nbsp;Activity was completed</label>\r\n                </div>\r\n                <div class=\"field\" show.bind=\"completed\">\r\n                    <label for=\"completedDate\">Completed:</label>\r\n                    <input type=\"date\" value.bind=\"activity.journal.completedDate\">\r\n                </div>\r\n            </div>\r\n            <div class=\"fields row\" show.bind=\"completed && isMeasurement\">\r\n                <div class=\"field four wide\">\r\n                    <label for=\"measurement\">Measurement</label>\r\n                    <div class=\"ui labeled input\">\r\n                        <input type=\"text\" id=\"measurement\" value.bind=\"activity.journal.measurement\">\r\n                        <div class=\"ui label\">${activity.unitOfMeasure}</div>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n            <div class=\"fields row\" show.bind=\"completed && !isMeasurement\">\r\n                <div class=\"field sixteen wide\">\r\n                    <label for=\"measurement\">Checklist</label>\r\n                    <div class=\"ui ordered list\">\r\n                        <template repeat.for=\"item of activity.journal.checklist\">\r\n                            <div class=\"item\">\r\n                                <div class=\"ui left action input\">                                \r\n                                    <button type=\"button\" class=\"mini ui icon button\" tabindex=\"-1\" click.delegate=\"removeFromChecklist($index)\" data-tooltip=\"Remove this item\">\r\n                                        <i class=\"icon button trash\"></i>\r\n                                    </button>\r\n                                    <input type=\"text\" value.bind=\"item.value\" keypress.delegate=\"onChecklistItemKeyPress($event, $index)\">\r\n                                </div>\r\n                            </div>\r\n                        </template>                        \r\n                    </div>\r\n                    <div class=\"ui list\">\r\n                        <div class=\"item\">\r\n                            <button type=\"button\" class=\"ui basic button\" click.delegate=\"addToChecklist()\">\r\n                                <i class=\"icon plus\"></i>\r\n                                Add an item\r\n                            </button>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n            <div class=\"fields row\">\r\n                <div class=\"field sixteen wide\">\r\n                    <label for=\"notes\">Notes</label>\r\n                    <textarea id=\"notes\" value.bind=\"activity.journal.notes\"></textarea>\r\n                </div>                    \r\n            </div>\r\n            <div class=\"ui divider\">&nbsp;</div>\r\n            </div>\r\n            <div class=\"ui error message\" show.bind=\"errors.length\">\r\n                <ul class=\"ui list\" repeat.for=\"e of errors\">\r\n                    <li>${e}</li>\r\n                </ul>\r\n            </div>\r\n        </form>\r\n    </div>\r\n</template>"; });
 define('text!styles/search.css', ['module'], function(module) { module.exports = "ux-dialog-container,\nux-dialog-container > div,\nux-dialog-container > div > div,\nux-dialog-container > div > div > ux-dialog#search {\n  width: 100%;\n  max-width: 1200px;\n  margin-left: auto;\n  margin-right: auto;\n  padding: 0;\n}\nux-dialog-container ux-dialog-header h2,\nux-dialog-container > div ux-dialog-header h2,\nux-dialog-container > div > div ux-dialog-header h2,\nux-dialog-container > div > div > ux-dialog#search ux-dialog-header h2 {\n  display: inline-block;\n}\nux-dialog-container ux-dialog-header button,\nux-dialog-container > div ux-dialog-header button,\nux-dialog-container > div > div ux-dialog-header button,\nux-dialog-container > div > div > ux-dialog#search ux-dialog-header button {\n  float: right;\n}\nux-dialog-container ux-dialog-body,\nux-dialog-container > div ux-dialog-body,\nux-dialog-container > div > div ux-dialog-body,\nux-dialog-container > div > div > ux-dialog#search ux-dialog-body {\n  overflow-y: auto;\n}\nux-dialog-container,\nux-dialog-container > div {\n  height: 100vh;\n}\nux-dialog-container > div {\n  padding: 30px;\n}\nux-dialog-container > div > div,\nux-dialog-container > div > div > ux-dialog#search {\n  height: 100%;\n}\nux-dialog#search {\n  display: inline-block;\n}\n"; });
+define('text!resources/views/calculator/calculator.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/calculator.css\"></require>\r\n    <require from=\"../controls/escape-quotes-value-converter\"></require>    \r\n    <require from=\"./order-table\"></require>\r\n\r\n    <ux-dialog id=\"calculator\" ref=\"el\">\r\n        <ux-dialog-body>\r\n            <form class=\"ui form segment\">\r\n                <h4 class=\"ui dividing header\">Requested Order</h4>\r\n                <div class=\"three fields\">\r\n                    <div class=\"field\">\r\n                        <label for=\"customer\">Customer</label>\r\n                        <div class=\"ui search selection dropdown customer\">\r\n                            <input type=\"hidden\" name=\"customer\" id=\"customer\">\r\n                            <i class=\"dropdown icon\"></i>\r\n                            <div class=\"default text\">Choose Customer</div>\r\n                            <div class=\"menu\">\r\n                                <div repeat.for=\"c of customers\" class=\"item\" data-value=\"${c.name}\">${c.name}</div>\r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label>Arrival Date</label>\r\n                        <div class=\"calendar\">\r\n                            <span class=\"date-display\">${dateDisplay}</span>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label for=\"plant\">Plant</label>\r\n                        <select name=\"plant\" id=\"plant\">\r\n                            <option value=\"\">Choose Plant</option>\r\n                            <option repeat.for=\"p of plants\" value.bind=\"p.name | escapeQuotes\">${p.name}</option>\r\n                        </select>\r\n                    </div>\r\n                </div>\r\n                <div class=\"three fields\">\r\n                    <div class=\"ui field\">\r\n                        <div class=\"ui toggle checkbox\">\r\n                            <input type=\"checkbox\" id=\"repeating-order\" checked.bind=\"isRepeatingOrder\">\r\n                            <label for=\"repeating-order\">Repeating Order</label>\r\n                        </div>\r\n                        <div class=\"field fields\" show.bind=\"isRepeatingOrder\">\r\n                            <div class=\"ui field inline eight wide\">\r\n                                <label for=\"repeat-count\"># times:</label>\r\n                                <input type=\"number\" id=\"repeat-count\" value.bind=\"repeatCount & debounce\" style=\"width: 70px\">\r\n                            </div>\r\n                            <div class=\"ui field inline eight wide\">\r\n                                <label for=\"repeat-days\">days apart:</label>\r\n                                <input type=\"number\" id=\"repeat-days\" value.bind=\"repeatDays & debounce\" style=\"width: 70px\">\r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label for=\"pots-per-case\">Pots Per Case</label>\r\n                        <input type=\"number\" name=\"pots-per-case\" id=\"pots-per-case\" value.bind=\"calculator.potsPerCase\" required>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label for=\"quantity\">Quantity</label>\r\n                        <input type=\"number\" id=\"quantity\" name=\"quantity\" value.bind=\"calculator.orderQuantity & debounce\" required>\r\n                    </div>\r\n                </div>\r\n\r\n                <div class=\"ui divider\"></div>\r\n                \r\n                <order-table calculator.bind=\"calculator\"></order-table>\r\n\r\n                <order-table repeat.for=\"c of repeatCalculators\" calculator.bind=\"c\"></order-table>\r\n\r\n            </form>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" class=\"basic ui button\" click.delegate=\"controller.cancel()\">Cancel</button>\r\n            <button type=\"button\" class=\"basic ui primary button\" click.delegate=\"createOrder()\">Save</button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>\r\n"; });
 define('text!resources/views/calculator/event-view.html', ['module'], function(module) { module.exports = "<template>\r\n    <div class=\"calendar\" ref=\"el\">\r\n        ${event.name} <span>(${event.date | dateFormat: 'ddd, MMM D'})</span>\r\n        <div class=\"ui dropdown button mini basic\" show.bind=\"calculator.order.stickDate\">\r\n            <div class=\"text\">Move</div>\r\n            <i class=\"dropdown icon\"></i>\r\n            <div class=\"menu\">\r\n                <div class=\"item\" repeat.for=\"zone of calculator.zones\" data-value=\"${zone.name}\">${zone.name}</div>\r\n            </div>\r\n        </div>\r\n    </div>\r\n</template>\r\n"; });
 define('text!resources/views/calculator/order-table.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/order-table.css\"></require>\r\n    <require from=\"./event-view\"></require>\r\n    <require from=\"./zone-cell\"></require>\r\n\r\n    <div class=\"ui field toggle checkbox right floated\">\r\n        <input type=\"checkbox\" name=\"partial-space\" id=\"partial-space\" checked.bind=\"calculator.partialSpace\">\r\n        <label for=\"partial-space\">Use partial spacing</label>\r\n    </div>\r\n\r\n    <table class=\"ui table\">\r\n        <thead>\r\n            <tr>\r\n                <th class=\"center aligned\">Event</th>\r\n                <th class=\"center aligned\">Week</th>\r\n                <th class=\"center aligned\">Tables</th>\r\n                <th class=\"center aligned\" repeat.for=\"z of calculator.zones\">\r\n                    <button type=\"button\" click.delegate=\"select(z)\" class=\"basic ui toggle icon button fluid\"\r\n                            show.bind=\"calculator.order.stickDate\">${z.name}</button>\r\n                    <span hide.bind=\"calculator.order.stickDate\">${z.name}</span>\r\n                </th>\r\n            </tr>\r\n        </thead>\r\n        <tbody>\r\n            <tr repeat.for=\"week of calculator.weeks\">\r\n                <td>\r\n                    <div class=\"ui ribbon label\" if.bind=\"week.events.length\">\r\n                        <event-view repeat.for=\"event of week.events\" event.bind=\"event\" calculator.bind=\"calculator\"></event-view>\r\n                    </div>\r\n                </td>\r\n                <td class=\"center aligned\">${week.week.week}</td>\r\n                <td class=\"center aligned\">${week.tables|numericFormat}</td>\r\n                <td class=\"center aligned\" repeat.for=\"zone of week.zones | keys\">\r\n                    <zone-cell calculator.bind=\"calculator\" week.bind=\"week\" zone.bind=\"week.zones[zone]\"></zone-cell>\r\n                </td>\r\n            </tr>\r\n        </tbody>\r\n    </table>\r\n</template>\r\n"; });
 define('text!styles/styles.css', ['module'], function(module) { module.exports = "/*!\n * # Semantic UI 0.0.8 - Calendar\n * http://github.com/semantic-org/semantic-ui/\n *\n *\n * Released under the MIT license\n * http://opensource.org/licenses/MIT\n *\n */\n\n\n/*******************************\n            Popup\n*******************************/\n\n.ui.calendar .ui.popup {\n  max-width: none;\n  padding: 0;\n  border: none;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\n\n\n/*******************************\n            Calendar\n*******************************/\n\n.ui.calendar .calendar:focus {\n  outline: 0;\n}\n\n\n/*******************************\n            Grid\n*******************************/\n\n.ui.calendar .ui.popup .ui.grid {\n  display: block;\n  white-space: nowrap;\n}\n.ui.calendar .ui.popup .ui.grid > .column {\n  width: auto;\n}\n\n\n/*******************************\n            Table\n*******************************/\n\n.ui.calendar .ui.table.year,\n.ui.calendar .ui.table.month,\n.ui.calendar .ui.table.minute {\n  min-width: 15em;\n}\n.ui.calendar .ui.table.day {\n  min-width: 18em;\n}\n.ui.calendar .ui.table.hour {\n  min-width: 20em;\n}\n.ui.calendar .ui.table tr th,\n.ui.calendar .ui.table tr td {\n  padding: 0.5em;\n  white-space: nowrap;\n}\n.ui.calendar .ui.table tr th {\n  border-left: none;\n}\n.ui.calendar .ui.table tr th .icon {\n  margin: 0;\n}\n.ui.calendar .ui.table tr th .icon {\n  margin: 0;\n}\n.ui.calendar .ui.table tr:first-child th {\n  position: relative;\n  padding-left: 0;\n  padding-right: 0;\n}\n.ui.calendar .ui.table.day tr:first-child th {\n  border: none;\n}\n.ui.calendar .ui.table.day tr:nth-child(2) th {\n  padding-top: 0.2em;\n  padding-bottom: 0.3em;\n}\n.ui.calendar .ui.table tr td {\n  padding-left: 0.1em;\n  padding-right: 0.1em;\n}\n.ui.calendar .ui.table tr .link {\n  cursor: pointer;\n}\n.ui.calendar .ui.table tr .prev.link {\n  width: 14.28571429%;\n  position: absolute;\n  left: 0;\n}\n.ui.calendar .ui.table tr .next.link {\n  width: 14.28571429%;\n  position: absolute;\n  right: 0;\n}\n.ui.calendar .ui.table tr .disabled {\n  pointer-events: none;\n  color: rgba(40, 40, 40, 0.3);\n}\n\n/*--------------\n     States\n---------------*/\n\n.ui.calendar .ui.table tr td.today {\n  font-weight: bold;\n}\n.ui.calendar .ui.table tr td.range {\n  background: rgba(0, 0, 0, 0.05);\n  color: rgba(0, 0, 0, 0.95);\n  box-shadow: none;\n}\n.ui.calendar .ui.table.inverted tr td.range {\n  background: rgba(255, 255, 255, 0.08);\n  color: #ffffff;\n  box-shadow: none;\n}\n.ui.calendar .calendar:focus .ui.table tbody tr td.focus,\n.ui.calendar .calendar.active .ui.table tbody tr td.focus {\n  box-shadow: inset 0 0 0 1px #85B7D9;\n}\n.ui.calendar .calendar:focus .ui.table.inverted tbody tr td.focus,\n.ui.calendar .calendar.active .ui.table.inverted tbody tr td.focus {\n  box-shadow: inset 0 0 0 1px #85B7D9;\n}\n\n\n/*******************************\n         Theme Overrides\n*******************************/\n\n\n/* General */\na {\n  cursor: pointer;\n}\na:hover {\n  text-decoration: underline;\n}\nlabel[for]:hover {\n  cursor: pointer;\n}\n.text-right {\n  text-align: right;\n}\n.text-center {\n  text-align: center;\n}\n.ui[class*=\"right floated\"] {\n  float: right;\n}\n.ui[class*=\"left floated\"] {\n  float: left;\n}\n.ui.secondary.pointing.menu .item.logo-item {\n  padding: 0 20px;\n}\n.ui.fixed.menu.button-bar.top {\n  top: 50px;\n}\n.ui.popup.calendar:focus {\n  outline: none;\n}\n#main-menu {\n  margin-bottom: 0;\n}\n.ui.main.container {\n  padding-top: 15px;\n}\n.ui.main.container footer {\n  text-align: center;\n  color: #636c72;\n}\n.date-display {\n  color: #4183C4;\n  cursor: pointer;\n}\n.date-display:hover {\n  text-decoration: underline;\n}\n@media only screen and (max-width: 767px) {\n  #main-menu > .ui.container {\n    margin: 0px !important;\n  }\n  .menu .item.logo-item span {\n    display: none;\n  }\n  .hide-mobile {\n    display: none !important;\n  }\n}\n@media only screen and (min-width: 768px) {\n  .hide-desktop {\n    display: none !important;\n  }\n}\n.ui.striped.table > tr:nth-child(2n),\n.ui.striped.table tbody tr:nth-child(2n) {\n  background-color: rbga(0, 0, 50, 0.05);\n}\n"; });
 define('text!resources/views/calculator/zone-cell.html', ['module'], function(module) { module.exports = "<template>\r\n    <button type=\"button\" click.trigger=\"select()\" hide.bind=\"zone.available==null\"\r\n        class=\"ui toggle icon button fluid ${zone.available < 0 ? 'red' : 'green'} ${zone.selected ? '' : 'basic'}\">\r\n        ${zone.available}\r\n    </button>\r\n    <span show.bind=\"zone.available == null\">&nbsp;</span>\r\n</template>"; });
 define('text!styles/tasks.css', ['module'], function(module) { module.exports = "#task-detail-container .button-container {\n  padding: 0;\n  display: inline-block;\n}\n#task-detail-container .button-container.fixed {\n  transition: all 0.5s ease;\n  position: fixed;\n  padding: 1em;\n  background-color: #fff;\n}\n@media only screen and (max-width: 1199px) and (min-width: 992px) {\n  #task-detail-container .button-container.fixed {\n    width: 933px;\n  }\n}\n#task-detail-container .ui.form .fields .fields.inline {\n  margin-bottom: 0;\n}\n#task-detail-container.not-recurring .recurrence {\n  display: none;\n}\n#task-detail-container.plant-task .zone-field {\n  display: none;\n}\n#task-detail-container.zone-task .plant-field {\n  display: none;\n}\n#task-detail-container input[type=number] {\n  width: 75px;\n}\n#task-detail-container .Day .weekly,\n#task-detail-container .On .weekly,\n#task-detail-container .Week .daily,\n#task-detail-container .On .daily {\n  display: none;\n}\n#task-detail-container .On .not-on {\n  display: none;\n}\n#task-detail-container .any-day .weekday {\n  display: none;\n}\n#task-detail-container .NoEnd .end-date,\n#task-detail-container .EndAfter .end-date,\n#task-detail-container .NoEnd .end-after-occurrences,\n#task-detail-container .EndDate .end-after-occurrences {\n  display: none;\n}\n"; });
-define('text!resources/views/home/index.html', ['module'], function(module) { module.exports = "<template>\n    <div class=\"segment\">\n        <div class=\"ui grid\">\n            <div class=\"four column row\">\n                <div class=\"left floated column\">\n                    <h1 class=\"ui left aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: lastYear}\">&lt; &nbsp; ${lastYear}</a>\n                    </h1>\n                </div>\n                <div class=\"column\">\n                    <h1 class=\"ui center aligned header\">${year}</h1>\n                </div>\n                <div class=\"right floated column\">\n                    <h1 class=\"ui right aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: nextYear}\">${nextYear} &nbsp; &gt;</a>\n                    </h1>\n                </div>\n            </div>\n        </div>\n\n        <table class=\"ui striped celled table\">\n            <thead>\n                <tr>\n                    <th>Week</th>\n                    <th repeat.for=\"zone of zones\" class=\"center aligned\">\n                        <button type=\"button\" class=\"ui basic button\" click.delegate=\"showZoneDetails(zone)\">${zone.name}</button>\n                    </th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr repeat.for=\"key,value of weeks\">\n                    <td>\n                        <button type=\"button\" class=\"ui basic button\" click.delegate=\"showWeekDetails(value)\">${value.week}</button>\n                    </td>\n                    <td repeat.for=\"zone of zones\">${value.zones[zone.name].available|numericFormat}</td>\n                </tr>\n            </tbody>\n        </table>\n\n        <div class=\"ui grid\">\n            <div class=\"four column row\">\n                <div class=\"left floated column\">\n                    <h1 class=\"ui left aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: lastYear}\">&lt; &nbsp; ${lastYear}</a>\n                    </h1>\n                </div>\n                <div class=\"column\">\n                    <h1 class=\"ui center aligned header\">${year}</h1>\n                </div>\n                <div class=\"right floated column\">\n                    <h1 class=\"ui right aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: nextYear}\">${nextYear} &nbsp; &gt;</a>\n                    </h1>\n                </div>\n            </div>\n        </div>\n    </div>\n</template>\n"; });
-define('text!styles/week-detail.css', ['module'], function(module) { module.exports = "#week-detail-sidebar {\n  margin-top: 70px !important;\n}\n#week-detail-sidebar > week-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: auto;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#week-detail-sidebar > week-detail button.close {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n  z-index: 100;\n}\n#week-detail-sidebar > week-detail div.calendar {\n  display: inline-block;\n  cursor: pointer;\n}\n#week-detail-sidebar > week-detail div.calendar.start,\n#week-detail-sidebar > week-detail div.calendar.end {\n  padding: 0.78571429em 0;\n}\n#week-detail-sidebar > week-detail .report-link {\n  padding: 0.78571429em 3px;\n  display: inline-block;\n}\n#week-detail-sidebar > week-detail .report-link:hover {\n  text-decoration: underline;\n}\n#week-detail-sidebar > week-detail .ui.form .inline.fields .field > .selection.dropdown,\n#week-detail-sidebar > week-detail .ui.form .inline.field > .selection.dropdown {\n  min-width: 100px;\n}\n#week-detail-sidebar > week-detail td.batch i {\n  float: right;\n}\n.ui[class*=\"super wide\"].left.sidebar,\n.ui[class*=\"super wide\"].right.sidebar {\n  width: 750px;\n}\n.ui.visible[class*=\"super wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-750px, 0, 0);\n  transform: translate3d(-750px, 0, 0);\n}\n"; });
 define('text!resources/views/controls/change-password.html', ['module'], function(module) { module.exports = "<template>\r\n    <ux-dialog id=\"change-password-dialog\">\r\n        <ux-dialog-header>\r\n            <h3>\r\n                <i class=\"fa fa-key\"></i>\r\n                Change Password\r\n            </h3>\r\n        </ux-dialog-header>\r\n        <ux-dialog-body>\r\n            <form class=\"ui form ${errors.length ? 'error' : ''}\">\r\n                <div class=\"field\">\r\n                    <label for=\"new\">Password:</label>\r\n                    <input id=\"new\" type=\"password\" value.bind=\"newPassword\">\r\n                </div>\r\n                <div class=\"field\">\r\n                    <label for=\"confirm\">Confirm:</label>\r\n                    <input id=\"confirm\" type=\"password\" value.bind=\"confirmPassword\">\r\n                </div>\r\n                <div class=\"ui divider\">&nbsp;</div>\r\n                <div class=\"ui error message\" show.bind=\"errors.length\">\r\n                    <div class=\"ui list\" repeat.for=\"e of errors\">\r\n                        <div class=\"item\">${e}</div>\r\n                    </div>\r\n                </div>\r\n            </form>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button class=\"ui basic button\" click.delegate=\"controller.cancel()\">Cancel</button>\r\n            <button class=\"ui basic primary button\" click.delegate=\"save()\">\r\n                <i class=\"save button icon\"></i>\r\n                Save\r\n            </button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>"; });
-define('text!styles/zone-detail.css', ['module'], function(module) { module.exports = "#zone-detail-sidebar {\n  margin-top: 70px !important;\n}\n#zone-detail-sidebar > zone-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: hidden;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#zone-detail-sidebar > zone-detail button {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n}\n#zone-detail-sidebar > zone-detail > table {\n  margin-bottom: 0;\n}\n#zone-detail-sidebar > zone-detail .table-wrapper {\n  height: calc(100vh - 275px);\n  overflow-y: auto;\n}\n#zone-detail-sidebar .ui.table th,\n#zone-detail-sidebar .ui.table td {\n  width: 75px;\n}\n.ui[class*=\"super-duper wide\"].left.sidebar,\n.ui[class*=\"super-duper wide\"].right.sidebar {\n  width: 80%;\n}\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-80%, 0, 0);\n  transform: translate3d(-80%, 0, 0);\n}\n"; });
+define('text!styles/week-detail.css', ['module'], function(module) { module.exports = "#week-detail-sidebar {\n  margin-top: 70px !important;\n}\n#week-detail-sidebar > week-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: auto;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#week-detail-sidebar > week-detail button.close {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n  z-index: 100;\n}\n#week-detail-sidebar > week-detail div.calendar {\n  display: inline-block;\n  cursor: pointer;\n}\n#week-detail-sidebar > week-detail div.calendar.start,\n#week-detail-sidebar > week-detail div.calendar.end {\n  padding: 0.78571429em 0;\n}\n#week-detail-sidebar > week-detail .report-link {\n  padding: 0.78571429em 3px;\n  display: inline-block;\n}\n#week-detail-sidebar > week-detail .report-link:hover {\n  text-decoration: underline;\n}\n#week-detail-sidebar > week-detail .ui.form .inline.fields .field > .selection.dropdown,\n#week-detail-sidebar > week-detail .ui.form .inline.field > .selection.dropdown {\n  min-width: 100px;\n}\n#week-detail-sidebar > week-detail td.batch i {\n  float: right;\n}\n.ui[class*=\"super wide\"].left.sidebar,\n.ui[class*=\"super wide\"].right.sidebar {\n  width: 750px;\n}\n.ui.visible[class*=\"super wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-750px, 0, 0);\n  transform: translate3d(-750px, 0, 0);\n}\n"; });
 define('text!resources/views/controls/error-notification.html', ['module'], function(module) { module.exports = "<template>\r\n    <ux-dialog>\r\n        <ux-dialog-body>\r\n            <div class=\"ui segment negative message\">\r\n                <p>\r\n                    <i class=\"icon warning circle\"></i>\r\n                    ${message}\r\n                </p>\r\n            </div>\r\n        </ux-dialog-body>\r\n\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" click.trigger=\"controller.cancel()\" class=\"ui button primary\">OK</button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>\r\n"; });
+define('text!styles/zone-detail.css', ['module'], function(module) { module.exports = "#zone-detail-sidebar {\n  margin-top: 70px !important;\n}\n#zone-detail-sidebar > zone-detail {\n  background-color: white;\n  height: calc(100vh - 100px);\n  overflow-y: hidden;\n  overflow-x: hidden;\n  display: block;\n  margin: 5px;\n  padding: 5px;\n}\n#zone-detail-sidebar > zone-detail button {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n}\n#zone-detail-sidebar > zone-detail > table {\n  margin-bottom: 0;\n}\n#zone-detail-sidebar > zone-detail .table-wrapper {\n  height: calc(100vh - 275px);\n  overflow-y: auto;\n}\n#zone-detail-sidebar .ui.table th,\n#zone-detail-sidebar .ui.table td {\n  width: 75px;\n}\n.ui[class*=\"super-duper wide\"].left.sidebar,\n.ui[class*=\"super-duper wide\"].right.sidebar {\n  width: 80%;\n}\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .fixed,\n.ui.visible[class*=\"super-duper wide\"].right.sidebar ~ .pusher {\n  -webkit-transform: translate3d(-80%, 0, 0);\n  transform: translate3d(-80%, 0, 0);\n}\n"; });
 define('text!resources/views/controls/nav-bar.html', ['module'], function(module) { module.exports = "<template>\n    <div id=\"main-menu\" class=\"ui inverted segment\" ref=\"el\">\n        <div class=\"ui container\">\n            <div class=\"ui large secondary inverted pointing menu\">\n                <a href=\"#\" class=\"item logo-item\">\n                    <img src=\"images/logo.png\" alt=\"Logo\" class=\"logo\">\n                    <span>Boekestyn Greenhouses</span>\n                </a>\n                <a repeat.for=\"item of authorizedRoutes\" href.bind=\"item.navModel.href\" class=\"item ${item.navModel.isActive? 'active' : ''}\">\n                    ${item.title}\n                </a>\n                <button type=\"button\" class=\"item\" click.delegate=\"showSearch()\" show.bind=\"canSearch\">\n                    <i class=\"icon search\"></i>\n                    Search\n                </button>\n                <button type=\"button\" class=\"item\" click.delegate=\"showCalculator()\" show.bind=\"canCreateOrders\">\n                    <i class=\"icon plus\"></i>\n                    New Order\n                </button>\n                <div class=\"ui right dropdown item\">\n                    ${userName}\n                    <i class=\"dropdown icon\"></i>\n                    <div class=\"menu\">\n                        <button type=\"button\" class=\"item\" click.delegate=\"changePassword()\">\n                            <i class=\"talk outline icon\"></i>\n                            Change Password\n                        </button>\n                        <button type=\"button\" class=\"item\" click.delegate=\"logout()\">\n                            <i class=\"sign out icon\"></i>\n                            Logout\n                        </button>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id=\"fixed-menu\" class=\"ui large top fixed menu transition hidden\">\n        <div class=\"ui container\">\n            <a href=\"#\" class=\"item logo-item\">\n                <img src=\"images/logo.png\" alt=\"Logo\" class=\"logo\">\n                <span>Boekestyn Greenhouses</span>\n            </a>\n            <a repeat.for=\"item of authorizedRoutes\" href.bind=\"item.navModel.href\" class=\"item ${item.navModel.isActive? 'active' : ''}\">\n                ${item.title}\n            </a>\n            <a class=\"item\" click.delegate=\"showSearch()\" show.bind=\"canSearch\">\n                <i class=\"icon search\"></i>\n                Search\n            </a>\n            <a class=\"item\" click.delegate=\"showCalculator()\" show.bind=\"canCreateOrders\">\n                <i class=\"icon plus\"></i>\n                New Order\n            </a>\n        </div>\n    </div>\n</template>\n"; });
 define('text!resources/views/controls/prompt.html', ['module'], function(module) { module.exports = "<template>\n    <ux-dialog>\n        <ux-dialog-body>\n            <p>${message}</p>\n        </ux-dialog-body>\n\n        <ux-dialog-footer>\n            <button type=\"button\" click.trigger=\"controller.cancel()\" class=\"ui button basic\">No</button>\n            <button type=\"button\" click.trigger=\"controller.ok()\" class=\"ui button primary\">Yes</button>\n        </ux-dialog-footer>\n    </ux-dialog>\n</template>\n"; });
+define('text!resources/views/home/index.html', ['module'], function(module) { module.exports = "<template>\n    <div class=\"segment\">\n        <div class=\"ui grid\">\n            <div class=\"four column row\">\n                <div class=\"left floated column\">\n                    <h1 class=\"ui left aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: lastYear}\">&lt; &nbsp; ${lastYear}</a>\n                    </h1>\n                </div>\n                <div class=\"column\">\n                    <h1 class=\"ui center aligned header\">${year}</h1>\n                </div>\n                <div class=\"right floated column\">\n                    <h1 class=\"ui right aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: nextYear}\">${nextYear} &nbsp; &gt;</a>\n                    </h1>\n                </div>\n            </div>\n        </div>\n\n        <table class=\"ui striped celled table\">\n            <thead>\n                <tr>\n                    <th>Week</th>\n                    <th repeat.for=\"zone of zones\" class=\"center aligned\">\n                        <button type=\"button\" class=\"ui basic button\" click.delegate=\"showZoneDetails(zone)\">${zone.name}</button>\n                    </th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr repeat.for=\"key,value of weeks\">\n                    <td>\n                        <button type=\"button\" class=\"ui basic button\" click.delegate=\"showWeekDetails(value)\">${value.week}</button>\n                    </td>\n                    <td repeat.for=\"zone of zones\">${value.zones[zone.name].available|numericFormat}</td>\n                </tr>\n            </tbody>\n        </table>\n\n        <div class=\"ui grid\">\n            <div class=\"four column row\">\n                <div class=\"left floated column\">\n                    <h1 class=\"ui left aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: lastYear}\">&lt; &nbsp; ${lastYear}</a>\n                    </h1>\n                </div>\n                <div class=\"column\">\n                    <h1 class=\"ui center aligned header\">${year}</h1>\n                </div>\n                <div class=\"right floated column\">\n                    <h1 class=\"ui right aligned header\">\n                        <a route-href=\"route: home; params.bind: { year: nextYear}\">${nextYear} &nbsp; &gt;</a>\n                    </h1>\n                </div>\n            </div>\n        </div>\n    </div>\n</template>\n"; });
 define('text!resources/views/orders/order-detail.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/order-detail.css\"></require>\r\n    <require from=\"../calculator/event-view\"></require>\r\n    <require from=\"../calculator/zone-cell\"></require>\r\n\r\n    <ux-dialog id=\"order-detail\" ref=\"el\">\r\n        <ux-dialog-header>\r\n            <h2>Order ${calculator.order.orderNumber}</h2>\r\n        </ux-dialog-header>\r\n        <ux-dialog-body>\r\n            <form class=\"ui form segment\">                \r\n                <div class=\"two fields\">\r\n                    <div class=\"field\">\r\n                        <label>Customer</label>\r\n                        <p>${calculator.order.customer.name}</p>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label>Arrival Date</label>\r\n                        <div class=\"calendar\" if.bind=\"canSaveChanges\">\r\n                            <span class=\"date-display\">${dateDisplay}</span>\r\n                        </div>\r\n                        <p if.bind=\"!canSaveChanges\">${dateDisplay}</p>\r\n                    </div>\r\n                </div>\r\n                <div class=\"three fields\">\r\n                    <div class=\"field\">\r\n                        <label>Plant</label>\r\n                        <p>${calculator.order.plant.name}</p>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label for=\"pots-per-case\">Pots Per Case</label>\r\n                        <input type=\"number\" name=\"pots-per-case\" id=\"pots-per-case\" value.bind=\"calculator.potsPerCase\" required>\r\n                    </div>\r\n                    <div class=\"field\">\r\n                        <label for=\"quantity\">Quantity</label>\r\n                        <input type=\"number\" id=\"quantity\" name=\"quantity\" value.bind=\"calculator.orderQuantity & debounce\" if.bind=\"canSaveChanges\" required>\r\n                        <p if.bind=\"!canSaveChanges\">${calculator.orderQuantity | numericFormat}</p>\r\n                    </div>\r\n                </div>\r\n\r\n                <div class=\"ui divider\"></div>\r\n\r\n                <div class=\"ui field toggle checkbox right floated\">\r\n                    <input type=\"checkbox\" name=\"partial-space\" id=\"partial-space\" checked.bind=\"calculator.partialSpace\">\r\n                    <label for=\"partial-space\">Use partial spacing</label>\r\n                </div>\r\n\r\n                <table class=\"ui table\">\r\n                    <thead>\r\n                        <tr>\r\n                            <th class=\"center aligned\">Event</th>\r\n                            <th class=\"center aligned\">Week</th>\r\n                            <th class=\"center aligned\">Tables</th>\r\n                            <th class=\"center aligned\" repeat.for=\"z of calculator.zones\">\r\n                                <button type=\"button\" click.delegate=\"selectZone(z)\" class=\"basic ui toggle icon button fluid\"\r\n                                    show.bind=\"calculator.order.stickDate\">${z.name}</button>\r\n                                <span hide=\"calculator.order.stickDate\">${z.name}</span>\r\n                            </th>\r\n                        </tr>\r\n                    </thead>\r\n                    <tbody>\r\n                        <tr repeat.for=\"week of calculator.weeks\">\r\n                            <td>\r\n                                <div class=\"ui ribbon label\" if.bind=\"week.events.length\">\r\n                                    <event-view repeat.for=\"event of week.events\" event.bind=\"event\" calculator.bind=\"calculator\"></event-view>\r\n                                </div>\r\n                            </td>\r\n                            <td class=\"center aligned\">${week.week.week}</td>\r\n                            <td class=\"center aligned\">${week.tables|numericFormat}</td>\r\n                            <td class=\"center aligned\" repeat.for=\"z of week.zones | keys\">\r\n                                <zone-cell calculator.bind=\"calculator\" week.bind=\"week\" zone.bind=\"week.zones[z]\"></zone-cell>\r\n                            </td>\r\n                        </tr>\r\n                    </tbody>\r\n                </table>\r\n            </form>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" class=\"ui basic red button left floated\" click.delegate=\"delete()\" data-tooltip=\"Click to Delete this Order\" show.bind=\"canSaveChanges\">\r\n                <i class=\"trash button icon\"></i>\r\n                Delete\r\n            </button>\r\n\r\n            <button type=\"button\" class=\"ui basic button\" click.delegate=\"cancel()\">${canSaveChanges ? 'Cancel' : 'Close'}</button>\r\n            <button type=\"button\" class=\"ui basic primary button\" click.delegate=\"save()\" show.bind=\"canSaveChanges\">\r\n                <i class=\"save button icon\"></i>\r\n                Save\r\n            </button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>\r\n"; });
 define('text!resources/views/plants/index.html', ['module'], function(module) { module.exports = "<template>\r\n    <div class=\"ui segments\">\r\n        <div class=\"ui clearing segment\">\r\n            <button type=\"button\" class=\"basic ui positive right floated button\" click.delegate=\"addPlant()\">\r\n                <i class=\"plus icon\"></i>\r\n                Add Plant\r\n            </button>\r\n        </div>\r\n        <div class=\"ui secondary segment\">\r\n            <table class=\"ui single line table\">\r\n                <thead>\r\n                    <tr>\r\n                        <th rowspan=\"2\">Name</th>\r\n                        <th class=\"collapsing\" rowspan=\"2\">Abbreviation</th>\r\n                        <th colspan=\"2\" class=\"center aligned\">Cuttings</th>\r\n                        <th class=\"collapsing\" rowspan=\"2\">Pots per Case</th>\r\n                        <th class=\"collapsing\" rowspan=\"2\">Lights Out</th>\r\n                    </tr>\r\n                    <tr>\r\n                        <th class=\"collapsing center aligned\">Per Pot</th>\r\n                        <th class=\"collapsing center aligned\">Per Table</th>                \r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr repeat.for=\"p of plants\">\r\n                        <td>                    \r\n                            <a click.delegate=\"detail(p)\">${p.name}</a>\r\n                        </td>\r\n                        <td class=\"collapsing\">${p.abbreviation}</td>\r\n                        <td class=\"center aligned\">${p.cuttingsPerPot}</td>\r\n                        <td class=\"center aligned\">${cuttingsPerTable(p)}</td>\r\n                        <td class=\"center aligned\">${p.potsPerCase}</td>\r\n                        <td class=\"center aligned\">\r\n                            <i class=\"icon checkmark\" show.bind=\"p.hasLightsOut\"></i>\r\n                        </td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n        </div>\r\n    </div>\r\n</template>"; });
 define('text!resources/views/plants/plant-detail.html', ['module'], function(module) { module.exports = "<template>\r\n    <require from=\"styles/plant-detail.css\"></require>\r\n\r\n    <ux-dialog id=\"plant-detail\" ref=\"el\">\r\n        <ux-dialog-header>\r\n            <h2 show.bind=\"isNew\">New Plant</h2>\r\n            <h2 hide.bind=\"isNew\">${plant.name}</h2>\r\n        </ux-dialog-header>\r\n        <ux-dialog-body>\r\n            <form class=\"ui form segment\">                \r\n                <div class=\"fields row\">\r\n                    <div class=\"field two wide\">\r\n                        <label for=\"size\">Size</label>\r\n                        <input type=\"text\" name=\"size\" id=\"size\" value.bind=\"plant.size\" attach-focus=\"true\">\r\n                    </div>\r\n                    <div class=\"field six wide\">\r\n                        <label for=\"crop\">Crop</label>\r\n                        <input type=\"text\" name=\"crop\" id=\"crop\" value.bind=\"plant.crop\">\r\n                    </div>\r\n                    <div class=\"field two wide\">\r\n                        <label for=\"abbreviation\">Abbreviation</label>\r\n                        <input type=\"text\" name=\"abbreviation\" id=\"abbreviation\" value.bind=\"plant.abbreviation\">\r\n                    </div>                    \r\n                    <div class=\"field four wide\">\r\n                        <!-- spacer -->\r\n                        <label>&nbsp;</label>\r\n                        <div class=\"ui toggle checkbox\">\r\n                            <input type=\"checkbox\" checked.bind=\"plant.hasLightsOut\">\r\n                            <label>Has Lights Out</label>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field two wide\">\r\n                        <label for=\"potsPerCase\">Pots per case</label>\r\n                        <input type=\"number\" name=\"potsPerCase\" id=\"potsPerCase\" value.bind=\"plant.potsPerCase\">\r\n                    </div>\r\n                </div>\r\n                <div class=\"ui divider\">&nbsp;</div>\r\n                <div class=\"fields row\">\r\n                    <div class=\"field three wide\">\r\n                        <label for=\"cuttingsPerPot\">Cuttings per Pot</label>\r\n                        <input type=\"number\" name=\"cuttingsPerPot\" id=\"cuttingsPerPot\" value.bind=\"plant.cuttingsPerPot\">\r\n                    </div>\r\n                    <div class=\"field one wide\">&nbsp;</div>\r\n                    <div class=\"field four wide\">\r\n                        <label for=\"cuttingsPerTableTight\">Cuttings per Table: Tight</label>\r\n                        <input type=\"number\" name=\"cuttingsPerTableTight\" id=\"cuttingsPerTableTight\" value.bind=\"plant.cuttingsPerTable.tight\">\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label for=\"cuttingsPerTableHalf\">Cuttings per Table: Half</label>\r\n                        <input type=\"number\" name=\"cuttingsPerTableHalf\" id=\"cuttingsPerTableHalf\" value.bind=\"plant.cuttingsPerTable.half\">\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label for=\"cuttingsPerTableFull\">Cuttings per Table: Full</label>\r\n                        <input type=\"number\" name=\"cuttingsPerTableFull\" id=\"cuttingsPerTableFull\" value.bind=\"plant.cuttingsPerTable.full\">\r\n                    </div>\r\n                </div>\r\n                <h4 class=\"ui horizontal divider header\">\r\n                    <button type=\"button\" class=\"tiny ui basic button\" click.delegate=\"previousSeason()\">\r\n                        &lt;\r\n                    </button>\r\n                    Seasons\r\n                    (<span innerHTML.bind=\"currentYear\"></span>)\r\n                    <button type=\"button\" class=\"tiny ui basic button\" click.delegate=\"nextSeason()\">\r\n                        &gt;\r\n                    </button>\r\n                </h4>\r\n                <div class=\"fields row\">\r\n                    <div class=\"field four wide\">\r\n                        <label>Spring</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentSeasonsYear.spring\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Summer</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentSeasonsYear.summer\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Fall</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentSeasonsYear.fall\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Winter</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentSeasonsYear.winter\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n                <h4 class=\"ui horizontal divider header\">\r\n                    <button type=\"button\" class=\"tiny ui basic button\" click.delegate=\"previousSeason()\">\r\n                        &lt;\r\n                    </button>\r\n                    Propagation Times\r\n                    (<span innerHTML.bind=\"currentYear\"></span>)\r\n                    <button type=\"button\" class=\"tiny ui basic button\" click.delegate=\"nextSeason()\">\r\n                        &gt;\r\n                    </button>\r\n                </h4>\r\n                <div class=\"fields row\">\r\n                    <div class=\"field four wide\">\r\n                        <label>Spring</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentPropationTimesYear.spring\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Summer</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentPropationTimesYear.summer\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Fall</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentPropationTimesYear.fall\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Winter</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentPropationTimesYear.winter\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n                <h4 class=\"ui horizontal divider header\">\r\n                    <button type=\"button\" class=\"tiny ui basic button\" click.delegate=\"previousSeason()\">\r\n                        &lt;\r\n                    </button>\r\n                    Flower Times\r\n                    (<span innerHTML.bind=\"currentYear\"></span>)\r\n                    <button type=\"button\" class=\"tiny ui basic button\" click.delegate=\"nextSeason()\">\r\n                        &gt;\r\n                    </button>\r\n                </h4>\r\n                <div class=\"fields row\">\r\n                    <div class=\"field four wide\">\r\n                        <label>Spring</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentFlowerTimesYear.spring\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Summer</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentFlowerTimesYear.summer\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Fall</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentFlowerTimesYear.fall\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                    <div class=\"field four wide\">\r\n                        <label>Winter</label>\r\n                        <div class=\"ui right labeled input\">\r\n                            <input type=\"number\" value.bind=\"currentFlowerTimesYear.winter\">\r\n                            <div class=\"ui basic label\">weeks</div>\r\n                        </div>\r\n                    </div>\r\n                </div>\r\n            </form>\r\n        </ux-dialog-body>\r\n        <ux-dialog-footer>\r\n            <button type=\"button\" class=\"ui basic red button left floated\" click.delegate=\"delete()\" data-tooltip=\"Click to Delete this Plant\" hide.bind=\"isNew\">\r\n                <i class=\"trash button icon\"></i>\r\n                Delete\r\n            </button>\r\n\r\n            <button type=\"button\" class=\"ui basic button\" click.delegate=\"cancel()\">Cancel</button>\r\n            <button type=\"button\" class=\"ui basic primary button\" click.delegate=\"save()\">\r\n                <i class=\"save button icon\"></i>\r\n                Save\r\n            </button>\r\n        </ux-dialog-footer>\r\n    </ux-dialog>\r\n</template>\r\n"; });
