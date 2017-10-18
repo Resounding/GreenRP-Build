@@ -2,7 +2,7 @@
   "name": "GreenRP",
   "description": "The Greenhouse Resource Planning application for Boekestyn Greenhouses.",
   "publisher": "Resounding Software",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/Resounding/GreenRP"
@@ -37,8 +37,7 @@
     "@types/numeral": "^0.0.19",
     "@types/pouchdb-core": "^6.1.7",
     "@types/pouchdb-find": "^6.3.0",
-    "@types/underscore": "^1.7.36",
-    "@types/whatwg-fetch": "^0.0.33",
+    "@types/underscore": "^1.8.3",
     "aurelia-cli": "^0.31.3",
     "aurelia-testing": "^1.0.0-beta.3.0.1",
     "aurelia-tools": "^1.0.0",
