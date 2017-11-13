@@ -15795,6 +15795,7 @@ define('aurelia-dialog/aurelia-dialog',["require", "exports", "./dialog-configur
     __export(dialog_service_1);
     __export(dialog_controller_1);
 });
+
 ;define('aurelia-dialog', ['aurelia-dialog/aurelia-dialog'], function (main) { return main; });
 
 define('aurelia-dialog/dialog-configuration',["require", "exports", "./renderer", "./dialog-settings", "./dialog-renderer", "aurelia-pal"], function (require, exports, renderer_1, dialog_settings_1, dialog_renderer_1, aurelia_pal_1) {
@@ -15813,9 +15814,11 @@ define('aurelia-dialog/dialog-configuration',["require", "exports", "./renderer"
     /**
      * A configuration builder for the dialog plugin.
      */
-    var DialogConfiguration = (function () {
+    var DialogConfiguration = /** @class */ (function () {
         function DialogConfiguration(frameworkConfiguration, applySetter) {
             var _this = this;
+            this.renderer = defaultRenderer;
+            this.cssText = defaultCSSText;
             this.resources = [];
             this.fwConfig = frameworkConfiguration;
             this.settings = this.fwConfig.container.get(dialog_settings_1.DefaultDialogSettings);
@@ -15872,7 +15875,7 @@ define('aurelia-dialog/dialog-configuration',["require", "exports", "./renderer"
             return this;
         };
         /**
-         * Configures the plugin to use specific css.
+         * Configures the plugin to use specific css. You can pass an empty string to clear any set css.
          * @param cssText The css to use in place of the default styles.
          * @return This instance.
          */
@@ -15891,7 +15894,7 @@ define('aurelia-dialog/renderer',["require", "exports"], function (require, expo
     /**
      * An abstract base class for implementors of the basic Renderer API.
      */
-    var Renderer = (function () {
+    var Renderer = /** @class */ (function () {
         function Renderer() {
         }
         /**
@@ -15926,7 +15929,7 @@ define('aurelia-dialog/dialog-settings',["require", "exports"], function (requir
     /**
      * @internal
      */
-    var DefaultDialogSettings = (function () {
+    var DefaultDialogSettings = /** @class */ (function () {
         function DefaultDialogSettings() {
             this.lock = true;
             this.startingZIndex = 1000;
@@ -15974,22 +15977,25 @@ define('aurelia-dialog/dialog-renderer',["require", "exports", "aurelia-pal", "a
     })();
     exports.hasTransition = (function () {
         var unprefixedName = 'transitionDuration';
-        var el = aurelia_pal_1.DOM.createElement('fakeelement');
         var prefixedNames = ['webkitTransitionDuration', 'oTransitionDuration'];
+        var el;
         var transitionDurationName;
-        if (unprefixedName in el.style) {
-            transitionDurationName = unprefixedName;
-        }
-        else {
-            transitionDurationName = prefixedNames.find(function (prefixed) { return (prefixed in el.style); });
-        }
         return function (element) {
+            if (!el) {
+                el = aurelia_pal_1.DOM.createElement('fakeelement');
+                if (unprefixedName in el.style) {
+                    transitionDurationName = unprefixedName;
+                }
+                else {
+                    transitionDurationName = prefixedNames.find(function (prefixed) { return (prefixed in el.style); });
+                }
+            }
             return !!transitionDurationName && !!(aurelia_pal_1.DOM.getComputedStyle(element)[transitionDurationName]
                 .split(',')
                 .find(function (duration) { return !!parseFloat(duration); }));
         };
     })();
-    var body = aurelia_pal_1.DOM.querySelectorAll('body')[0];
+    var body;
     function getActionKey(e) {
         if ((e.code || e.key) === 'Escape' || e.keyCode === 27) {
             return 'Escape';
@@ -15999,9 +16005,10 @@ define('aurelia-dialog/dialog-renderer',["require", "exports", "aurelia-pal", "a
         }
         return undefined;
     }
-    var DialogRenderer = DialogRenderer_1 = (function () {
+    var DialogRenderer = /** @class */ (function () {
         function DialogRenderer() {
         }
+        DialogRenderer_1 = DialogRenderer;
         DialogRenderer.keyboardEventHandler = function (e) {
             var key = getActionKey(e);
             if (!key) {
@@ -16107,6 +16114,7 @@ define('aurelia-dialog/dialog-renderer',["require", "exports", "aurelia-pal", "a
         DialogRenderer.prototype.awaitTransition = function (setActiveInactive, ignore) {
             var _this = this;
             return new Promise(function (resolve) {
+                // tslint:disable-next-line:no-this-assignment
                 var renderer = _this;
                 var eventName = exports.transitionEvent();
                 function onTransitionEnd(e) {
@@ -16130,6 +16138,9 @@ define('aurelia-dialog/dialog-renderer',["require", "exports", "aurelia-pal", "a
         };
         DialogRenderer.prototype.showDialog = function (dialogController) {
             var _this = this;
+            if (!body) {
+                body = aurelia_pal_1.DOM.querySelectorAll('body')[0];
+            }
             if (dialogController.settings.host) {
                 this.host = dialogController.settings.host;
             }
@@ -16155,14 +16166,14 @@ define('aurelia-dialog/dialog-renderer',["require", "exports", "aurelia-pal", "a
             return this.awaitTransition(function () { return _this.setAsInactive(); }, dialogController.settings.ignoreTransitions)
                 .then(function () { _this.detach(dialogController); });
         };
+        DialogRenderer.dialogControllers = [];
+        DialogRenderer = DialogRenderer_1 = __decorate([
+            aurelia_dependency_injection_1.transient()
+        ], DialogRenderer);
         return DialogRenderer;
+        var DialogRenderer_1;
     }());
-    DialogRenderer.dialogControllers = [];
-    DialogRenderer = DialogRenderer_1 = __decorate([
-        aurelia_dependency_injection_1.transient()
-    ], DialogRenderer);
     exports.DialogRenderer = DialogRenderer;
-    var DialogRenderer_1;
 });
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -16174,15 +16185,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 define('aurelia-dialog/ux-dialog',["require", "exports", "aurelia-templating"], function (require, exports, aurelia_templating_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var UxDialog = (function () {
+    var UxDialog = /** @class */ (function () {
         function UxDialog() {
         }
+        UxDialog = __decorate([
+            aurelia_templating_1.customElement('ux-dialog'),
+            aurelia_templating_1.inlineView("\n  <template>\n    <slot></slot>\n  </template>\n")
+        ], UxDialog);
         return UxDialog;
     }());
-    UxDialog = __decorate([
-        aurelia_templating_1.customElement('ux-dialog'),
-        aurelia_templating_1.inlineView("\n  <template>\n    <slot></slot>\n  </template>\n")
-    ], UxDialog);
     exports.UxDialog = UxDialog;
 });
 
@@ -16195,7 +16206,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 define('aurelia-dialog/ux-dialog-header',["require", "exports", "aurelia-templating", "./dialog-controller"], function (require, exports, aurelia_templating_1, dialog_controller_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var UxDialogHeader = (function () {
+    var UxDialogHeader = /** @class */ (function () {
         function UxDialogHeader(controller) {
             this.controller = controller;
         }
@@ -16204,29 +16215,30 @@ define('aurelia-dialog/ux-dialog-header',["require", "exports", "aurelia-templat
                 this.showCloseButton = !this.controller.settings.lock;
             }
         };
+        /**
+         * @internal
+         */
+        // tslint:disable-next-line:member-ordering
+        UxDialogHeader.inject = [dialog_controller_1.DialogController];
+        __decorate([
+            aurelia_templating_1.bindable()
+        ], UxDialogHeader.prototype, "showCloseButton", void 0);
+        UxDialogHeader = __decorate([
+            aurelia_templating_1.customElement('ux-dialog-header'),
+            aurelia_templating_1.inlineView("\n  <template>\n    <button\n      type=\"button\"\n      class=\"dialog-close\"\n      aria-label=\"Close\"\n      if.bind=\"showCloseButton\"\n      click.trigger=\"controller.cancel()\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n\n    <div class=\"dialog-header-content\">\n      <slot></slot>\n    </div>\n  </template>\n")
+        ], UxDialogHeader);
         return UxDialogHeader;
     }());
-    /**
-     * @internal
-     */
-    UxDialogHeader.inject = [dialog_controller_1.DialogController];
-    __decorate([
-        aurelia_templating_1.bindable()
-    ], UxDialogHeader.prototype, "showCloseButton", void 0);
-    UxDialogHeader = __decorate([
-        aurelia_templating_1.customElement('ux-dialog-header'),
-        aurelia_templating_1.inlineView("\n  <template>\n    <button\n      type=\"button\"\n      class=\"dialog-close\"\n      aria-label=\"Close\"\n      if.bind=\"showCloseButton\"\n      click.trigger=\"controller.cancel()\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n\n    <div class=\"dialog-header-content\">\n      <slot></slot>\n    </div>\n  </template>\n")
-    ], UxDialogHeader);
     exports.UxDialogHeader = UxDialogHeader;
 });
 
-define('aurelia-dialog/dialog-controller',["require", "exports", "./renderer", "./lifecycle", "./dialog-cancel-error"], function (require, exports, renderer_1, lifecycle_1, dialog_cancel_error_1) {
+define('aurelia-dialog/dialog-controller',["require", "exports", "./renderer", "./lifecycle", "./dialog-close-error", "./dialog-cancel-error"], function (require, exports, renderer_1, lifecycle_1, dialog_close_error_1, dialog_cancel_error_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * A controller object for a Dialog instance.
      */
-    var DialogController = (function () {
+    var DialogController = /** @class */ (function () {
         /**
          * Creates an instance of DialogController.
          */
@@ -16239,9 +16251,9 @@ define('aurelia-dialog/dialog-controller',["require", "exports", "./renderer", "
         /**
          * @internal
          */
-        DialogController.prototype.releaseResources = function () {
+        DialogController.prototype.releaseResources = function (result) {
             var _this = this;
-            return lifecycle_1.invokeLifecycle(this.controller.viewModel || {}, 'deactivate')
+            return lifecycle_1.invokeLifecycle(this.controller.viewModel || {}, 'deactivate', result)
                 .then(function () { return _this.renderer.hideDialog(_this); })
                 .then(function () { _this.controller.unbind(); });
         };
@@ -16269,13 +16281,14 @@ define('aurelia-dialog/dialog-controller',["require", "exports", "./renderer", "
             return this.close(false, output);
         };
         /**
-         * Closes the dialog with an error result.
-         * @param message An error message.
+         * Closes the dialog with an error output.
+         * @param output A reason for closing with an error.
          * @returns Promise An empty promise object.
          */
-        DialogController.prototype.error = function (message) {
+        DialogController.prototype.error = function (output) {
             var _this = this;
-            return this.releaseResources().then(function () { _this.reject(message); });
+            var closeError = dialog_close_error_1.createDialogCloseError(output);
+            return this.releaseResources(closeError).then(function () { _this.reject(closeError); });
         };
         /**
          * Closes the dialog.
@@ -16288,7 +16301,9 @@ define('aurelia-dialog/dialog-controller',["require", "exports", "./renderer", "
             if (this.closePromise) {
                 return this.closePromise;
             }
-            return this.closePromise = lifecycle_1.invokeLifecycle(this.controller.viewModel || {}, 'canDeactivate').catch(function (reason) {
+            var dialogResult = { wasCancelled: !ok, output: output };
+            return this.closePromise = lifecycle_1.invokeLifecycle(this.controller.viewModel || {}, 'canDeactivate', dialogResult)
+                .catch(function (reason) {
                 _this.closePromise = undefined;
                 return Promise.reject(reason);
             }).then(function (canDeactivate) {
@@ -16296,9 +16311,9 @@ define('aurelia-dialog/dialog-controller',["require", "exports", "./renderer", "
                     _this.closePromise = undefined; // we are done, do not block consecutive calls
                     return _this.cancelOperation();
                 }
-                return _this.releaseResources().then(function () {
+                return _this.releaseResources(dialogResult).then(function () {
                     if (!_this.settings.rejectOnCancel || ok) {
-                        _this.resolve({ wasCancelled: !ok, output: output });
+                        _this.resolve(dialogResult);
                     }
                     else {
                         _this.reject(dialog_cancel_error_1.createDialogCancelError(output));
@@ -16310,12 +16325,13 @@ define('aurelia-dialog/dialog-controller',["require", "exports", "./renderer", "
                 });
             });
         };
+        /**
+         * @internal
+         */
+        // tslint:disable-next-line:member-ordering
+        DialogController.inject = [renderer_1.Renderer];
         return DialogController;
     }());
-    /**
-     * @internal
-     */
-    DialogController.inject = [renderer_1.Renderer];
     exports.DialogController = DialogController;
 });
 
@@ -16346,6 +16362,21 @@ define('aurelia-dialog/lifecycle',["require", "exports"], function (require, exp
     exports.invokeLifecycle = invokeLifecycle;
 });
 
+define('aurelia-dialog/dialog-close-error',["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * @internal
+     */
+    function createDialogCloseError(output) {
+        var error = new Error();
+        error.wasCancelled = false;
+        error.output = output;
+        return error;
+    }
+    exports.createDialogCloseError = createDialogCloseError;
+});
+
 define('aurelia-dialog/dialog-cancel-error',["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -16370,15 +16401,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 define('aurelia-dialog/ux-dialog-body',["require", "exports", "aurelia-templating"], function (require, exports, aurelia_templating_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var UxDialogBody = (function () {
+    var UxDialogBody = /** @class */ (function () {
         function UxDialogBody() {
         }
+        UxDialogBody = __decorate([
+            aurelia_templating_1.customElement('ux-dialog-body'),
+            aurelia_templating_1.inlineView("\n  <template>\n    <slot></slot>\n  </template>\n")
+        ], UxDialogBody);
         return UxDialogBody;
     }());
-    UxDialogBody = __decorate([
-        aurelia_templating_1.customElement('ux-dialog-body'),
-        aurelia_templating_1.inlineView("\n  <template>\n    <slot></slot>\n  </template>\n")
-    ], UxDialogBody);
     exports.UxDialogBody = UxDialogBody;
 });
 
@@ -16394,12 +16425,13 @@ define('aurelia-dialog/ux-dialog-footer',["require", "exports", "aurelia-templat
     /**
      * View-model for footer of Dialog.
      */
-    var UxDialogFooter = UxDialogFooter_1 = (function () {
+    var UxDialogFooter = /** @class */ (function () {
         function UxDialogFooter(controller) {
             this.controller = controller;
             this.buttons = [];
             this.useDefaultButtons = false;
         }
+        UxDialogFooter_1 = UxDialogFooter;
         UxDialogFooter.isCancelButton = function (value) {
             return value === 'Cancel';
         };
@@ -16416,24 +16448,25 @@ define('aurelia-dialog/ux-dialog-footer',["require", "exports", "aurelia-templat
                 this.buttons = ['Cancel', 'Ok'];
             }
         };
+        /**
+         * @internal
+         */
+        // tslint:disable-next-line:member-ordering
+        UxDialogFooter.inject = [dialog_controller_1.DialogController];
+        __decorate([
+            aurelia_templating_1.bindable
+        ], UxDialogFooter.prototype, "buttons", void 0);
+        __decorate([
+            aurelia_templating_1.bindable
+        ], UxDialogFooter.prototype, "useDefaultButtons", void 0);
+        UxDialogFooter = UxDialogFooter_1 = __decorate([
+            aurelia_templating_1.customElement('ux-dialog-footer'),
+            aurelia_templating_1.inlineView("\n  <template>\n    <slot></slot>\n    <template if.bind=\"buttons.length > 0\">\n      <button type=\"button\"\n        class=\"btn btn-default\"\n        repeat.for=\"button of buttons\"\n        click.trigger=\"close(button)\">\n        ${button}\n      </button>\n    </template>\n  </template>\n")
+        ], UxDialogFooter);
         return UxDialogFooter;
+        var UxDialogFooter_1;
     }());
-    /**
-     * @internal
-     */
-    UxDialogFooter.inject = [dialog_controller_1.DialogController];
-    __decorate([
-        aurelia_templating_1.bindable
-    ], UxDialogFooter.prototype, "buttons", void 0);
-    __decorate([
-        aurelia_templating_1.bindable
-    ], UxDialogFooter.prototype, "useDefaultButtons", void 0);
-    UxDialogFooter = UxDialogFooter_1 = __decorate([
-        aurelia_templating_1.customElement('ux-dialog-footer'),
-        aurelia_templating_1.inlineView("\n  <template>\n    <slot></slot>\n    <template if.bind=\"buttons.length > 0\">\n      <button type=\"button\"\n        class=\"btn btn-default\"\n        repeat.for=\"button of buttons\"\n        click.trigger=\"close(button)\">\n        ${button}\n      </button>\n    </template>\n  </template>\n")
-    ], UxDialogFooter);
     exports.UxDialogFooter = UxDialogFooter;
-    var UxDialogFooter_1;
 });
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -16445,7 +16478,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 define('aurelia-dialog/attach-focus',["require", "exports", "aurelia-templating", "aurelia-pal"], function (require, exports, aurelia_templating_1, aurelia_pal_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var AttachFocus = (function () {
+    var AttachFocus = /** @class */ (function () {
         function AttachFocus(element) {
             this.element = element;
             this.value = true;
@@ -16458,15 +16491,16 @@ define('aurelia-dialog/attach-focus',["require", "exports", "aurelia-templating"
         AttachFocus.prototype.valueChanged = function (newValue) {
             this.value = newValue;
         };
+        /**
+         * @internal
+         */
+        // tslint:disable-next-line:member-ordering
+        AttachFocus.inject = [aurelia_pal_1.DOM.Element];
+        AttachFocus = __decorate([
+            aurelia_templating_1.customAttribute('attach-focus')
+        ], AttachFocus);
         return AttachFocus;
     }());
-    /**
-     * @internal
-     */
-    AttachFocus.inject = [aurelia_pal_1.DOM.Element];
-    AttachFocus = __decorate([
-        aurelia_templating_1.customAttribute('attach-focus')
-    ], AttachFocus);
     exports.AttachFocus = AttachFocus;
 });
 
@@ -16484,7 +16518,7 @@ define('aurelia-dialog/dialog-service',["require", "exports", "aurelia-dependenc
     /**
      * A service allowing for the creation of dialogs.
      */
-    var DialogService = (function () {
+    var DialogService = /** @class */ (function () {
         function DialogService(container, compositionEngine, defaultSettings) {
             /**
              * The current dialog controllers
@@ -16520,7 +16554,11 @@ define('aurelia-dialog/dialog-service',["require", "exports", "aurelia-dependenc
         };
         DialogService.prototype.ensureViewModel = function (compositionContext) {
             if (typeof compositionContext.viewModel === 'function') {
-                compositionContext.viewModel = aurelia_metadata_1.Origin.get(compositionContext.viewModel).moduleId;
+                var moduleId = aurelia_metadata_1.Origin.get(compositionContext.viewModel).moduleId;
+                if (!moduleId) {
+                    return Promise.reject(new Error("Can not resolve \"moduleId\" of \"" + compositionContext.viewModel.name + "\"."));
+                }
+                compositionContext.viewModel = moduleId;
             }
             if (typeof compositionContext.viewModel === 'string') {
                 return this.compositionEngine.ensureViewModel(compositionContext);
@@ -16618,23 +16656,24 @@ define('aurelia-dialog/dialog-service',["require", "exports", "aurelia-dependenc
                         if (result.wasCancelled) {
                             return controller;
                         }
-                        return;
+                        return null;
                     });
                 }
-                return controller.cancel().then(function () { return; }).catch(function (reason) {
+                return controller.cancel().then(function () { return null; }).catch(function (reason) {
                     if (reason.wasCancelled) {
                         return controller;
                     }
-                    return Promise.reject(reason);
+                    throw reason;
                 });
             })).then(function (unclosedControllers) { return unclosedControllers.filter(function (unclosed) { return !!unclosed; }); });
         };
+        /**
+         * @internal
+         */
+        // tslint:disable-next-line:member-ordering
+        DialogService.inject = [aurelia_dependency_injection_1.Container, aurelia_templating_1.CompositionEngine, dialog_settings_1.DefaultDialogSettings];
         return DialogService;
     }());
-    /**
-     * @internal
-     */
-    DialogService.inject = [aurelia_dependency_injection_1.Container, aurelia_templating_1.CompositionEngine, dialog_settings_1.DefaultDialogSettings];
     exports.DialogService = DialogService;
     function removeController(service, dialogController) {
         var i = service.controllers.indexOf(dialogController);
@@ -31592,7 +31631,8 @@ define('aurelia-templating-resources/aurelia-templating-resources',['exports', '
   exports.updateOneTimeBinding = _repeatUtilities.updateOneTimeBinding;
   exports.unwrapExpression = _repeatUtilities.unwrapExpression;
   exports.viewsRequireLifecycle = _analyzeViewFactory.viewsRequireLifecycle;
-});;define('aurelia-templating-resources', ['aurelia-templating-resources/aurelia-templating-resources'], function (main) { return main; });
+});
+;define('aurelia-templating-resources', ['aurelia-templating-resources/aurelia-templating-resources'], function (main) { return main; });
 
 define('aurelia-templating-router/aurelia-templating-router',['exports', 'aurelia-router', './route-loader', './router-view', './route-href'], function (exports, _aureliaRouter, _routeLoader, _routerView, _routeHref) {
   'use strict';
@@ -31613,360 +31653,302 @@ define('aurelia-templating-router/aurelia-templating-router',['exports', 'aureli
   exports.RouterView = _routerView.RouterView;
   exports.RouteHref = _routeHref.RouteHref;
   exports.configure = configure;
-});;define('aurelia-templating-router', ['aurelia-templating-router/aurelia-templating-router'], function (main) { return main; });
-
-define('aurelia-testing/aurelia-testing',['exports', './compile-spy', './view-spy', './component-tester', './wait'], function (exports, _compileSpy, _viewSpy, _componentTester, _wait) {
-  'use strict';
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.waitForDocumentElements = exports.waitForDocumentElement = exports.waitFor = exports.configure = exports.ComponentTester = exports.StageComponent = exports.ViewSpy = exports.CompileSpy = undefined;
-
-
-  function configure(config) {
-    config.globalResources('./compile-spy', './view-spy');
-  }
-
-  exports.CompileSpy = _compileSpy.CompileSpy;
-  exports.ViewSpy = _viewSpy.ViewSpy;
-  exports.StageComponent = _componentTester.StageComponent;
-  exports.ComponentTester = _componentTester.ComponentTester;
-  exports.configure = configure;
-  exports.waitFor = _wait.waitFor;
-  exports.waitForDocumentElement = _wait.waitForDocumentElement;
-  exports.waitForDocumentElements = _wait.waitForDocumentElements;
-});;define('aurelia-testing', ['aurelia-testing/aurelia-testing'], function (main) { return main; });
-
-define('aurelia-testing/compile-spy',['exports', 'aurelia-templating', 'aurelia-dependency-injection', 'aurelia-logging', 'aurelia-pal'], function (exports, _aureliaTemplating, _aureliaDependencyInjection, _aureliaLogging, _aureliaPal) {
-  'use strict';
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.CompileSpy = undefined;
-
-  var LogManager = _interopRequireWildcard(_aureliaLogging);
-
-  function _interopRequireWildcard(obj) {
-    if (obj && obj.__esModule) {
-      return obj;
-    } else {
-      var newObj = {};
-
-      if (obj != null) {
-        for (var key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
-        }
-      }
-
-      newObj.default = obj;
-      return newObj;
-    }
-  }
-
-  
-
-  var _dec, _dec2, _class;
-
-  var CompileSpy = exports.CompileSpy = (_dec = (0, _aureliaTemplating.customAttribute)('compile-spy'), _dec2 = (0, _aureliaDependencyInjection.inject)(_aureliaPal.DOM.Element, _aureliaTemplating.TargetInstruction), _dec(_class = _dec2(_class = function CompileSpy(element, instruction) {
-    
-
-    LogManager.getLogger('compile-spy').info(element, instruction);
-  }) || _class) || _class);
 });
-define('aurelia-testing/view-spy',['exports', 'aurelia-templating', 'aurelia-logging'], function (exports, _aureliaTemplating, _aureliaLogging) {
-  'use strict';
+;define('aurelia-templating-router', ['aurelia-templating-router/aurelia-templating-router'], function (main) { return main; });
 
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.ViewSpy = undefined;
-
-  var LogManager = _interopRequireWildcard(_aureliaLogging);
-
-  function _interopRequireWildcard(obj) {
-    if (obj && obj.__esModule) {
-      return obj;
-    } else {
-      var newObj = {};
-
-      if (obj != null) {
-        for (var key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
-        }
-      }
-
-      newObj.default = obj;
-      return newObj;
+define('aurelia-testing/aurelia-testing',["require", "exports", "./compile-spy", "./view-spy", "./component-tester", "./wait"], function (require, exports, compile_spy_1, view_spy_1, component_tester_1, wait_1) {
+    "use strict";
+    function __export(m) {
+        for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
     }
-  }
-
-  
-
-  var _dec, _class;
-
-  var ViewSpy = exports.ViewSpy = (_dec = (0, _aureliaTemplating.customAttribute)('view-spy'), _dec(_class = function () {
-    function ViewSpy() {
-      
-
-      this.logger = LogManager.getLogger('view-spy');
+    Object.defineProperty(exports, "__esModule", { value: true });
+    __export(compile_spy_1);
+    __export(view_spy_1);
+    __export(component_tester_1);
+    __export(wait_1);
+    function configure(config) {
+        config.globalResources([
+            './compile-spy',
+            './view-spy'
+        ]);
     }
-
-    ViewSpy.prototype._log = function _log(lifecycleName, context) {
-      if (!this.value && lifecycleName === 'created') {
-        this.logger.info(lifecycleName, this.view);
-      } else if (this.value && this.value.indexOf(lifecycleName) !== -1) {
-        this.logger.info(lifecycleName, this.view, context);
-      }
-    };
-
-    ViewSpy.prototype.created = function created(view) {
-      this.view = view;
-      this._log('created');
-    };
-
-    ViewSpy.prototype.bind = function bind(bindingContext) {
-      this._log('bind', bindingContext);
-    };
-
-    ViewSpy.prototype.attached = function attached() {
-      this._log('attached');
-    };
-
-    ViewSpy.prototype.detached = function detached() {
-      this._log('detached');
-    };
-
-    ViewSpy.prototype.unbind = function unbind() {
-      this._log('unbind');
-    };
-
-    return ViewSpy;
-  }()) || _class);
+    exports.configure = configure;
 });
-define('aurelia-testing/component-tester',['exports', 'aurelia-templating', 'aurelia-framework', './wait'], function (exports, _aureliaTemplating, _aureliaFramework, _wait) {
-  'use strict';
 
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.ComponentTester = exports.StageComponent = undefined;
+;define('aurelia-testing', ['aurelia-testing/aurelia-testing'], function (main) { return main; });
 
-  
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+define('aurelia-testing/compile-spy',["require", "exports", "aurelia-templating", "aurelia-dependency-injection", "aurelia-logging", "aurelia-pal"], function (require, exports, aurelia_templating_1, aurelia_dependency_injection_1, aurelia_logging_1, aurelia_pal_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * Attribute to be placed on any element to have it emit the View Compiler's
+     * TargetInstruction into the debug console, giving you insight into all the
+     * parsed bindings, behaviors and event handers for the targeted element.
+     */
+    var CompileSpy = /** @class */ (function () {
+        /**
+         * Creates and instanse of CompileSpy.
+         * @param element target element on where attribute is placed on.
+         * @param instruction instructions for how the target element should be enhanced.
+         */
+        function CompileSpy(element, instruction) {
+            aurelia_logging_1.getLogger('compile-spy').info(element.toString(), instruction);
+        }
+        CompileSpy = __decorate([
+            aurelia_templating_1.customAttribute('compile-spy'),
+            aurelia_dependency_injection_1.inject(aurelia_pal_1.DOM.Element, aurelia_templating_1.TargetInstruction)
+        ], CompileSpy);
+        return CompileSpy;
+    }());
+    exports.CompileSpy = CompileSpy;
+});
 
-  var StageComponent = exports.StageComponent = function () {
-    function StageComponent() {
-      
-    }
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+define('aurelia-testing/view-spy',["require", "exports", "aurelia-templating", "aurelia-logging"], function (require, exports, aurelia_templating_1, aurelia_logging_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * Attribute to be placed on any HTML element in a view to emit the View instance
+     * to the debug console, giving you insight into the live View instance, including
+     * all child views, live bindings, behaviors and more.
+     */
+    var ViewSpy = /** @class */ (function () {
+        /**
+         * Creates a new instance of ViewSpy.
+         */
+        function ViewSpy() {
+            this.logger = aurelia_logging_1.getLogger('view-spy');
+        }
+        ViewSpy.prototype._log = function (lifecycleName, context) {
+            if (!this.value && lifecycleName === 'created') {
+                this.logger.info(lifecycleName, this.view);
+            }
+            else if (this.value && this.value.indexOf(lifecycleName) !== -1) {
+                this.logger.info(lifecycleName, this.view, context);
+            }
+        };
+        /**
+         * Invoked when the target view is created.
+         * @param view The target view.
+         */
+        ViewSpy.prototype.created = function (view) {
+            this.view = view;
+            this._log('created');
+        };
+        /**
+         * Invoked when the target view is bound.
+         * @param bindingContext The target view's binding context.
+         */
+        ViewSpy.prototype.bind = function (bindingContext) {
+            this._log('bind', bindingContext);
+        };
+        /**
+         * Invoked when the target element is attached to the DOM.
+         */
+        ViewSpy.prototype.attached = function () {
+            this._log('attached');
+        };
+        /**
+         * Invoked when the target element is detached from the DOM.
+         */
+        ViewSpy.prototype.detached = function () {
+            this._log('detached');
+        };
+        /**
+         * Invoked when the target element is unbound.
+         */
+        ViewSpy.prototype.unbind = function () {
+            this._log('unbind');
+        };
+        ViewSpy = __decorate([
+            aurelia_templating_1.customAttribute('view-spy')
+        ], ViewSpy);
+        return ViewSpy;
+    }());
+    exports.ViewSpy = ViewSpy;
+});
 
-    StageComponent.withResources = function withResources(resources) {
-      return new ComponentTester().withResources(resources);
-    };
-
-    return StageComponent;
-  }();
-
-  var ComponentTester = exports.ComponentTester = function () {
-    function ComponentTester() {
-      
-
-      this.configure = function (aurelia) {
-        return aurelia.use.standardConfiguration();
-      };
-
-      this._resources = [];
-    }
-
-    ComponentTester.prototype.bootstrap = function bootstrap(configure) {
-      this.configure = configure;
-    };
-
-    ComponentTester.prototype.withResources = function withResources(resources) {
-      this._resources = resources;
-      return this;
-    };
-
-    ComponentTester.prototype.inView = function inView(html) {
-      this._html = html;
-      return this;
-    };
-
-    ComponentTester.prototype.boundTo = function boundTo(bindingContext) {
-      this._bindingContext = bindingContext;
-      return this;
-    };
-
-    ComponentTester.prototype.manuallyHandleLifecycle = function manuallyHandleLifecycle() {
-      this._prepareLifecycle();
-      return this;
-    };
-
-    ComponentTester.prototype.create = function create(bootstrap) {
-      var _this = this;
-
-      return bootstrap(function (aurelia) {
-        return Promise.resolve(_this.configure(aurelia)).then(function () {
-          if (_this._resources) {
-            aurelia.use.globalResources(_this._resources);
-          }
-
-          return aurelia.start().then(function (a) {
-            _this.host = document.createElement('div');
-            _this.host.innerHTML = _this._html;
-
-            document.body.appendChild(_this.host);
-
-            return aurelia.enhance(_this._bindingContext, _this.host).then(function () {
-              _this._rootView = aurelia.root;
-              _this.element = _this.host.firstElementChild;
-
-              if (aurelia.root.controllers.length) {
-                _this.viewModel = aurelia.root.controllers[0].viewModel;
-              }
-
-              return new Promise(function (resolve) {
-                return setTimeout(function () {
-                  return resolve();
-                }, 0);
-              });
+define('aurelia-testing/component-tester',["require", "exports", "aurelia-templating", "./wait"], function (require, exports, aurelia_templating_1, wait_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var StageComponent = /** @class */ (function () {
+        function StageComponent() {
+        }
+        StageComponent.withResources = function (resources) {
+            if (resources === void 0) { resources = []; }
+            return new ComponentTester().withResources(resources);
+        };
+        return StageComponent;
+    }());
+    exports.StageComponent = StageComponent;
+    var ComponentTester = /** @class */ (function () {
+        function ComponentTester() {
+            this.resources = [];
+        }
+        ComponentTester.prototype.configure = function (aurelia) {
+            return aurelia.use.standardConfiguration();
+        };
+        ComponentTester.prototype.bootstrap = function (configure) {
+            this.configure = configure;
+        };
+        ComponentTester.prototype.withResources = function (resources) {
+            this.resources = resources;
+            return this;
+        };
+        ComponentTester.prototype.inView = function (html) {
+            this.html = html;
+            return this;
+        };
+        ComponentTester.prototype.boundTo = function (bindingContext) {
+            this.bindingContext = bindingContext;
+            return this;
+        };
+        ComponentTester.prototype.manuallyHandleLifecycle = function () {
+            this._prepareLifecycle();
+            return this;
+        };
+        ComponentTester.prototype.create = function (bootstrap) {
+            var _this = this;
+            return bootstrap(function (aurelia) {
+                return Promise.resolve(_this.configure(aurelia)).then(function () {
+                    if (_this.resources) {
+                        aurelia.use.globalResources(_this.resources);
+                    }
+                    return aurelia.start().then(function () {
+                        _this.host = document.createElement('div');
+                        _this.host.innerHTML = _this.html;
+                        document.body.appendChild(_this.host);
+                        return aurelia.enhance(_this.bindingContext, _this.host).then(function () {
+                            _this.rootView = aurelia.root;
+                            _this.element = _this.host.firstElementChild;
+                            if (aurelia.root.controllers.length) {
+                                _this.viewModel = aurelia.root.controllers[0].viewModel;
+                            }
+                            return new Promise(function (resolve) { return setTimeout(function () { return resolve(); }, 0); });
+                        });
+                    });
+                });
             });
-          });
-        });
-      });
-    };
-
-    ComponentTester.prototype.dispose = function dispose() {
-      if (this.host === undefined || this._rootView === undefined) {
-        throw new Error('Cannot call ComponentTester.dispose() before ComponentTester.create()');
-      }
-
-      this._rootView.detached();
-      this._rootView.unbind();
-
-      return this.host.parentNode.removeChild(this.host);
-    };
-
-    ComponentTester.prototype._prepareLifecycle = function _prepareLifecycle() {
-      var _this2 = this;
-
-      var bindPrototype = _aureliaTemplating.View.prototype.bind;
-      _aureliaTemplating.View.prototype.bind = function () {};
-      this.bind = function (bindingContext) {
-        return new Promise(function (resolve) {
-          _aureliaTemplating.View.prototype.bind = bindPrototype;
-          if (bindingContext !== undefined) {
-            _this2._bindingContext = bindingContext;
-          }
-          _this2._rootView.bind(_this2._bindingContext);
-          setTimeout(function () {
-            return resolve();
-          }, 0);
-        });
-      };
-
-      var attachedPrototype = _aureliaTemplating.View.prototype.attached;
-      _aureliaTemplating.View.prototype.attached = function () {};
-      this.attached = function () {
-        return new Promise(function (resolve) {
-          _aureliaTemplating.View.prototype.attached = attachedPrototype;
-          _this2._rootView.attached();
-          setTimeout(function () {
-            return resolve();
-          }, 0);
-        });
-      };
-
-      this.detached = function () {
-        return new Promise(function (resolve) {
-          _this2._rootView.detached();
-          setTimeout(function () {
-            return resolve();
-          }, 0);
-        });
-      };
-
-      this.unbind = function () {
-        return new Promise(function (resolve) {
-          _this2._rootView.unbind();
-          setTimeout(function () {
-            return resolve();
-          }, 0);
-        });
-      };
-    };
-
-    ComponentTester.prototype.waitForElement = function waitForElement(selector, options) {
-      var _this3 = this;
-
-      return (0, _wait.waitFor)(function () {
-        return _this3.element.querySelector(selector);
-      }, options);
-    };
-
-    ComponentTester.prototype.waitForElements = function waitForElements(selector, options) {
-      var _this4 = this;
-
-      return (0, _wait.waitFor)(function () {
-        return _this4.element.querySelectorAll(selector);
-      }, options);
-    };
-
-    return ComponentTester;
-  }();
+        };
+        ComponentTester.prototype.dispose = function () {
+            if (this.host === undefined || this.rootView === undefined) {
+                throw new Error('Cannot call ComponentTester.dispose() before ComponentTester.create()');
+            }
+            this.rootView.detached();
+            this.rootView.unbind();
+            return this.host.parentNode.removeChild(this.host);
+        };
+        ComponentTester.prototype._prepareLifecycle = function () {
+            var _this = this;
+            // bind
+            var bindPrototype = aurelia_templating_1.View.prototype.bind;
+            // tslint:disable-next-line:no-empty
+            aurelia_templating_1.View.prototype.bind = function () { };
+            this.bind = function (bindingContext) { return new Promise(function (resolve) {
+                aurelia_templating_1.View.prototype.bind = bindPrototype;
+                if (bindingContext !== undefined) {
+                    _this.bindingContext = bindingContext;
+                }
+                _this.rootView.bind(_this.bindingContext);
+                setTimeout(function () { return resolve(); }, 0);
+            }); };
+            // attached
+            var attachedPrototype = aurelia_templating_1.View.prototype.attached;
+            // tslint:disable-next-line:no-empty
+            aurelia_templating_1.View.prototype.attached = function () { };
+            this.attached = function () { return new Promise(function (resolve) {
+                aurelia_templating_1.View.prototype.attached = attachedPrototype;
+                _this.rootView.attached();
+                setTimeout(function () { return resolve(); }, 0);
+            }); };
+            // detached
+            this.detached = function () { return new Promise(function (resolve) {
+                _this.rootView.detached();
+                setTimeout(function () { return resolve(); }, 0);
+            }); };
+            // unbind
+            this.unbind = function () { return new Promise(function (resolve) {
+                _this.rootView.unbind();
+                setTimeout(function () { return resolve(); }, 0);
+            }); };
+        };
+        ComponentTester.prototype.waitForElement = function (selector, options) {
+            var _this = this;
+            return wait_1.waitFor(function () { return _this.element.querySelector(selector); }, options);
+        };
+        ComponentTester.prototype.waitForElements = function (selector, options) {
+            var _this = this;
+            return wait_1.waitFor(function () { return _this.element.querySelectorAll(selector); }, options);
+        };
+        return ComponentTester;
+    }());
+    exports.ComponentTester = ComponentTester;
 });
-define('aurelia-testing/wait',['exports'], function (exports) {
-  'use strict';
 
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.waitFor = waitFor;
-  exports.waitForDocumentElement = waitForDocumentElement;
-  exports.waitForDocumentElements = waitForDocumentElements;
-  function waitFor(getter, options) {
-    var timedOut = false;
-
-    options = Object.assign({
-      present: true,
-      interval: 50,
-      timeout: 5000
-    }, options);
-
-    function wait() {
-      var element = getter();
-
-      var found = element !== null && (!(element instanceof NodeList) && !element.jquery || element.length > 0);
-
-      if (!options.present ^ found || timedOut) {
-        return Promise.resolve(element);
-      }
-
-      return new Promise(function (rs) {
-        return setTimeout(rs, options.interval);
-      }).then(wait);
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
     }
-
-    return Promise.race([new Promise(function (rs, rj) {
-      return setTimeout(function () {
-        timedOut = true;
-        rj(options.present ? 'Element not found' : 'Element not removed');
-      }, options.timeout);
-    }), wait()]);
-  }
-
-  function waitForDocumentElement(selector, options) {
-    return waitFor(function () {
-      return document.querySelector(selector);
-    }, options);
-  }
-
-  function waitForDocumentElements(selector, options) {
-    return waitFor(function () {
-      return document.querySelectorAll(selector);
-    }, options);
-  }
+    return t;
+};
+define('aurelia-testing/wait',["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * Generic function to wait for something to happen. Uses polling
+     * @param getter: a getter function that returns anything else than `null` or an
+     *                empty array or an empty jQuery object when the
+     *                condition is met
+     * @param options: lookup options, defaults to
+     *                 `{present: true, interval: 50, timeout: 5000}`
+     */
+    function waitFor(getter, options) {
+        if (options === void 0) { options = { present: true, interval: 50, timeout: 5000 }; }
+        // prevents infinite recursion if the request times out
+        var timedOut = false;
+        options = __assign({ present: true, interval: 50, timeout: 5000 }, options);
+        function wait() {
+            var element = getter();
+            // boolean is needed here, hence the length > 0
+            var found = element !== null && (!(element instanceof NodeList) &&
+                !element.jquery || element.length > 0);
+            if (!options.present === !found || timedOut) {
+                return Promise.resolve(element);
+            }
+            return new Promise(function (rs) { return setTimeout(rs, options.interval); }).then(wait);
+        }
+        return Promise.race([
+            new Promise(function (_, rj) { return setTimeout(function () {
+                timedOut = true;
+                rj(options.present ? 'Element not found' : 'Element not removed');
+            }, options.timeout); }),
+            wait()
+        ]);
+    }
+    exports.waitFor = waitFor;
+    function waitForDocumentElement(selector, options) {
+        return waitFor(function () { return document.querySelector(selector); }, options);
+    }
+    exports.waitForDocumentElement = waitForDocumentElement;
+    function waitForDocumentElements(selector, options) {
+        return waitFor(function () { return document.querySelectorAll(selector); }, options);
+    }
+    exports.waitForDocumentElements = waitForDocumentElements;
 });
+
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -37954,6 +37936,7 @@ define('aurelia-testing/wait',['exports'], function (exports) {
 
 	return CryptoJS;
 
-}));;define('crypto-js', ['crypto-js/crypto-js'], function (main) { return main; });
+}));
+;define('crypto-js', ['crypto-js/crypto-js'], function (main) { return main; });
 
-function _aureliaConfigureModuleLoader(){requirejs.config({"baseUrl":"src/","paths":{"root":"src","theme":"node_modules/semantic-ui-css/themes/**/*.*","deploy":"../GreenRP-build","aurelia-binding":"..\\node_modules\\aurelia-binding\\dist\\amd\\aurelia-binding","aurelia-bootstrapper":"..\\node_modules\\aurelia-bootstrapper\\dist\\amd\\aurelia-bootstrapper","aurelia-dependency-injection":"..\\node_modules\\aurelia-dependency-injection\\dist\\amd\\aurelia-dependency-injection","aurelia-event-aggregator":"..\\node_modules\\aurelia-event-aggregator\\dist\\amd\\aurelia-event-aggregator","aurelia-fetch-client":"..\\node_modules\\aurelia-fetch-client\\dist\\amd\\aurelia-fetch-client","aurelia-framework":"..\\node_modules\\aurelia-framework\\dist\\amd\\aurelia-framework","aurelia-history":"..\\node_modules\\aurelia-history\\dist\\amd\\aurelia-history","aurelia-history-browser":"..\\node_modules\\aurelia-history-browser\\dist\\amd\\aurelia-history-browser","aurelia-loader":"..\\node_modules\\aurelia-loader\\dist\\amd\\aurelia-loader","aurelia-loader-default":"..\\node_modules\\aurelia-loader-default\\dist\\amd\\aurelia-loader-default","aurelia-logging":"..\\node_modules\\aurelia-logging\\dist\\amd\\aurelia-logging","aurelia-logging-console":"..\\node_modules\\aurelia-logging-console\\dist\\amd\\aurelia-logging-console","aurelia-metadata":"..\\node_modules\\aurelia-metadata\\dist\\amd\\aurelia-metadata","aurelia-pal":"..\\node_modules\\aurelia-pal\\dist\\amd\\aurelia-pal","aurelia-pal-browser":"..\\node_modules\\aurelia-pal-browser\\dist\\amd\\aurelia-pal-browser","aurelia-path":"..\\node_modules\\aurelia-path\\dist\\amd\\aurelia-path","aurelia-polyfills":"..\\node_modules\\aurelia-polyfills\\dist\\amd\\aurelia-polyfills","aurelia-route-recognizer":"..\\node_modules\\aurelia-route-recognizer\\dist\\amd\\aurelia-route-recognizer","aurelia-router":"..\\node_modules\\aurelia-router\\dist\\amd\\aurelia-router","aurelia-task-queue":"..\\node_modules\\aurelia-task-queue\\dist\\amd\\aurelia-task-queue","aurelia-templating":"..\\node_modules\\aurelia-templating\\dist\\amd\\aurelia-templating","aurelia-templating-binding":"..\\node_modules\\aurelia-templating-binding\\dist\\amd\\aurelia-templating-binding","text":"..\\node_modules\\text\\text","app-bundle":"../scripts/app-bundle"},"packages":[{"name":"aurelia-dialog","location":"../node_modules/aurelia-dialog/dist/amd","main":"aurelia-dialog"},{"name":"aurelia-templating-resources","location":"../node_modules/aurelia-templating-resources/dist/amd","main":"aurelia-templating-resources"},{"name":"aurelia-templating-router","location":"../node_modules/aurelia-templating-router/dist/amd","main":"aurelia-templating-router"},{"name":"aurelia-testing","location":"../node_modules/aurelia-testing/dist/amd","main":"aurelia-testing"},{"name":"crypto-js","location":"../node_modules/crypto-js","main":"crypto-js"}],"stubModules":[],"shim":{},"bundles":{"app-bundle":["environment","main","resources/models/activity","resources/models/capacity-week","resources/models/customer","resources/models/order","resources/models/plant","resources/models/recipe","resources/models/recurrence","resources/models/season-time","resources/models/season","resources/models/task","resources/models/week","resources/models/zone","resources/services/authentication","resources/services/configuration","resources/services/database","resources/services/log","resources/services/notifications","resources/views/app","resources/views/login","resources/services/data/activities-service","resources/services/data/orders-service","resources/services/data/recipes-service","resources/services/data/reference-service","resources/services/data/users-service","resources/services/domain/capacity-service","resources/services/domain/order-calculator","resources/services/domain/season-selector","resources/services/domain/space-calculator","resources/services/domain/time-selector","resources/services/domain/week-detail-service","resources/services/domain/zone-detail-service","resources/views/activities/activities-by-crop","resources/views/activities/activities-by-recipe","resources/views/activities/activity-card","resources/views/activities/activity-detail","resources/views/activities/complete-dialog","resources/views/activities/incomplete-dialog","resources/views/activities/index","resources/views/activities/journal-detail","resources/views/calculator/calculator","resources/views/calculator/event-view","resources/views/calculator/order-table","resources/views/calculator/zone-cell","resources/views/controls/change-password","resources/views/controls/date-format-value-converter","resources/views/controls/error-notification","resources/views/controls/escape-quotes-value-converter","resources/views/controls/keys-value-converter","resources/views/controls/nav-bar","resources/views/controls/numeric-format-value-converter","resources/views/controls/prompt","resources/views/controls/sort-value-converter","resources/views/home/index","resources/views/orders/order-detail","resources/views/plants/index","resources/views/plants/plant-detail","resources/views/recipes/detail","resources/views/recipes/index","resources/views/recipes/task-detail","resources/views/reports/flower-this-week","resources/views/reports/plant-this-week","resources/views/search/search-service","resources/views/search/search","resources/views/zones/zone-detail","resources/views/weeks/week-detail","resources/services/domain/models/calculator-order","resources/services/domain/models/calculator-week","resources/services/domain/models/calculator-zone","text!resources/../../package.json","styles/activities","styles/calculator","styles/login","styles/order-detail","styles/order-table","styles/plant-detail","styles/recipes","styles/reports","styles/search","styles/styles","styles/tasks","styles/week-detail","styles/zone-detail","resources/views/reports/report"]}})}
+function _aureliaConfigureModuleLoader(){requirejs.config({"baseUrl":"src/","paths":{"root":"src","theme":"node_modules/semantic-ui-css/themes/**/*.*","deploy":"../GreenRP-build","aurelia-binding":"..\\node_modules\\aurelia-binding\\dist\\amd\\aurelia-binding","aurelia-bootstrapper":"..\\node_modules\\aurelia-bootstrapper\\dist\\amd\\aurelia-bootstrapper","aurelia-dependency-injection":"..\\node_modules\\aurelia-dependency-injection\\dist\\amd\\aurelia-dependency-injection","aurelia-event-aggregator":"..\\node_modules\\aurelia-event-aggregator\\dist\\amd\\aurelia-event-aggregator","aurelia-fetch-client":"..\\node_modules\\aurelia-fetch-client\\dist\\amd\\aurelia-fetch-client","aurelia-framework":"..\\node_modules\\aurelia-framework\\dist\\amd\\aurelia-framework","aurelia-history":"..\\node_modules\\aurelia-history\\dist\\amd\\aurelia-history","aurelia-history-browser":"..\\node_modules\\aurelia-history-browser\\dist\\amd\\aurelia-history-browser","aurelia-loader":"..\\node_modules\\aurelia-loader\\dist\\amd\\aurelia-loader","aurelia-loader-default":"..\\node_modules\\aurelia-loader-default\\dist\\amd\\aurelia-loader-default","aurelia-logging":"..\\node_modules\\aurelia-logging\\dist\\amd\\aurelia-logging","aurelia-logging-console":"..\\node_modules\\aurelia-logging-console\\dist\\amd\\aurelia-logging-console","aurelia-metadata":"..\\node_modules\\aurelia-metadata\\dist\\amd\\aurelia-metadata","aurelia-pal":"..\\node_modules\\aurelia-pal\\dist\\amd\\aurelia-pal","aurelia-pal-browser":"..\\node_modules\\aurelia-pal-browser\\dist\\amd\\aurelia-pal-browser","aurelia-path":"..\\node_modules\\aurelia-path\\dist\\amd\\aurelia-path","aurelia-polyfills":"..\\node_modules\\aurelia-polyfills\\dist\\amd\\aurelia-polyfills","aurelia-route-recognizer":"..\\node_modules\\aurelia-route-recognizer\\dist\\amd\\aurelia-route-recognizer","aurelia-router":"..\\node_modules\\aurelia-router\\dist\\amd\\aurelia-router","aurelia-task-queue":"..\\node_modules\\aurelia-task-queue\\dist\\amd\\aurelia-task-queue","aurelia-templating":"..\\node_modules\\aurelia-templating\\dist\\amd\\aurelia-templating","aurelia-templating-binding":"..\\node_modules\\aurelia-templating-binding\\dist\\amd\\aurelia-templating-binding","text":"..\\node_modules\\text\\text","app-bundle":"../scripts/app-bundle"},"packages":[{"name":"aurelia-dialog","location":"../node_modules/aurelia-dialog/dist/amd","main":"aurelia-dialog"},{"name":"aurelia-templating-resources","location":"../node_modules/aurelia-templating-resources/dist/amd","main":"aurelia-templating-resources"},{"name":"aurelia-templating-router","location":"../node_modules/aurelia-templating-router/dist/amd","main":"aurelia-templating-router"},{"name":"aurelia-testing","location":"../node_modules/aurelia-testing/dist/amd","main":"aurelia-testing"},{"name":"crypto-js","location":"../node_modules/crypto-js","main":"crypto-js"}],"stubModules":[],"shim":{},"bundles":{"app-bundle":["environment","main","resources/models/activity","resources/models/capacity-week","resources/models/customer","resources/models/order","resources/models/plant","resources/models/recipe","resources/models/recurrence","resources/models/season-time","resources/models/season","resources/models/task","resources/models/week","resources/models/zone","resources/services/authentication","resources/services/configuration","resources/services/database","resources/services/log","resources/services/notifications","resources/views/app","resources/views/login","resources/services/data/activities-service","resources/services/data/orders-service","resources/services/data/recipes-service","resources/services/data/reference-service","resources/services/data/users-service","resources/services/domain/capacity-service","resources/services/domain/order-calculator","resources/services/domain/season-selector","resources/services/domain/space-calculator","resources/services/domain/time-selector","resources/services/domain/week-detail-service","resources/services/domain/zone-detail-service","resources/views/activities/activities-by-crop","resources/views/activities/activities-by-recipe","resources/views/activities/activity-card","resources/views/activities/activity-detail","resources/views/activities/complete-dialog","resources/views/activities/incomplete-dialog","resources/views/activities/index","resources/views/activities/journal-detail","resources/views/calculator/calculator","resources/views/calculator/event-view","resources/views/calculator/order-table","resources/views/calculator/zone-cell","resources/views/home/index","resources/views/controls/change-password","resources/views/controls/date-format-value-converter","resources/views/controls/error-notification","resources/views/controls/escape-quotes-value-converter","resources/views/controls/keys-value-converter","resources/views/controls/nav-bar","resources/views/controls/numeric-format-value-converter","resources/views/controls/prompt","resources/views/controls/sort-value-converter","resources/views/orders/order-detail","resources/views/plants/index","resources/views/plants/plant-detail","resources/views/recipes/detail","resources/views/recipes/index","resources/views/recipes/task-detail","resources/views/reports/flower-this-week","resources/views/reports/plant-this-week","resources/views/search/search-service","resources/views/search/search","resources/views/weeks/week-detail","resources/views/zones/zone-detail","resources/services/domain/models/calculator-order","resources/services/domain/models/calculator-week","resources/services/domain/models/calculator-zone","text!resources/../../package.json","styles/activities","styles/calculator","styles/login","styles/order-detail","styles/order-table","styles/plant-detail","styles/recipes","styles/reports","styles/search","styles/styles","styles/tasks","styles/week-detail","styles/zone-detail","resources/views/reports/report"]}})}
